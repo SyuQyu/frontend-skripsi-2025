@@ -1,0 +1,14 @@
+#defaultLayouts {
+    @apply relative flex flex-col h-auto min-h-screen;
+    header#header {
+        @apply w-full h-16 bg-gray-800 text-white flex justify-center items-center;
+    }
+
+    main#main {
+        @apply flex-1 w-full h-auto min-h-screen p-10; 
+    }
+
+    footer#footer {
+        @apply w-full h-16 bg-gray-800 text-white flex justify-center items-center;
+    }
+}

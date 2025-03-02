@@ -1,0 +1,14 @@
+#authLayouts {
+    @apply relative flex h-auto min-h-screen max-w-[1400px] w-full flex-col xl:flex-row;
+    div#sideNavigationAuth {
+        @apply max-w-[350px] hidden min-h-screen w-full h-16 bg-white flex-col justify-start items-start px-5 py-6 gap-5 sm:hidden xl:flex;
+    }
+
+    header#authHeader {
+        @apply w-full h-16 flex justify-between items-center p-5 sm:flex xl:hidden;
+    }
+
+    main#mainAuthLayouts {
+        @apply flex-1 w-full h-auto min-h-screen; 
+    }
+}

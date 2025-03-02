@@ -1,0 +1,21 @@
+:root {
+    --black-primary: #06192F;
+}
+
+* {
+    font-family: var(--font-roboto);
+}
+
+* {
+    font-family: var(--font-roboto);
+    line-height: 20px;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+    color: var(--black-primary);
+}
+
+p, a {
+    font-size: 15px;
+}
+

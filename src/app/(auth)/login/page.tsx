@@ -1,0 +1,153 @@
+"use client"
+import React, { useEffect, useState } from "react"
+import { useFormik } from "formik"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { IoCheckmark, IoWarningOutline } from "react-icons/io5"
+import { Button, Card, Input } from "@/components/common"
+import { Checkbox } from "@/components/ui/checkbox"
+import useAuthStore from "@/context/auth"
+import { useToast } from "@/components/ui/use-toast"
+import { getAccessToken } from "@/lib/cookies"
+
+interface FormValues {
+  email: string
+  password: string
+}
+
+function validate(values: FormValues) {
+  const errors: Partial<FormValues> = {}
+  if (!values.email) {
+    errors.email = "Required"
+  }
+  else if (!/^[\w.%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+    errors.email = "Invalid email address"
+  }
+  if (!values.password) {
+    errors.password = "Required"
+  }
+  return errors
+}
+
+export default function Login() {
+  const router = useRouter()
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const { login } = useAuthStore()
+  const { toast } = useToast()
+
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+    },
+    validate,
+    onSubmit: async (values, { setSubmitting, setErrors }) => {
+      setErrors({})
+      setSuccessMessage(null)
+      setErrorMessage(null)
+      const response = await login(values.email, values.password)
+      if (response.error) {
+        toast({
+          icon: (<IoWarningOutline className="size-6" />),
+          title: "Login failed.",
+          description: response.message.detail,
+        })
+      }
+      else {
+        toast({
+          icon: (<IoCheckmark className="size-6 text-green-600" />),
+          title: "Login Success.",
+        })
+        router.push(`/`)
+        setSubmitting(false)
+      }
+    },
+  })
+
+  useEffect(() => {
+    const accessToken = getAccessToken()
+    if (accessToken) {
+      router.push(`/`)
+    }
+  }, [router])
+
+  return (
+    <div className="flex flex-row justify-center items-center">
+      <Card
+        title="Sign into your account"
+        description="Welcome back! Log in to continue your self-empathy journey."
+        footer={(
+          <div className="text-center">
+            <p className="text-[#A7A7A7] space-x-1 mb-4">
+              <span>By signing in you agree to our</span>
+              <span className="underline">Terms of Service</span>
+              <span>and</span>
+              <span className="underline">Privacy Policy</span>
+            </p>
+          </div>
+        )}
+        styleTitle="text-2xl text-center"
+        styleFooter="text-[#A7A7A7] flex justify-center items-center !p-0"
+        styleCard="w-full flex flex-col gap-5 xl:!px-10 !px-5 !py-0 xl:!py-[24px] min-h-screen !rounded-none xl:max-w-[700px] xl:border-solid border-none"
+        styleContent="!p-0"
+        styleDescription="text-base text-black text-center"
+      >
+        <form onSubmit={formik.handleSubmit} className="gap-8 flex flex-col">
+          <Input
+            label="Email"
+            type="email"
+            name="email"
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            value={formik.values.email}
+            error={formik.touched.email && formik.errors.email ? formik.errors.email : null}
+          />
+          <Input
+            label="Password"
+            type="password"
+            name="password"
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            value={formik.values.password}
+            error={formik.touched.password && formik.errors.password ? formik.errors.password : null}
+          />
+          <div className="flex flex-row justify-between items-center">
+            <div className="flex flex-row justify-start items-center gap-2">
+              <label htmlFor="rememberMe" className="flex flex-row items-center gap-2 cursor-pointer">
+                <Checkbox
+                  id="rememberMe"
+                  className="rounded-[4px]"
+                />
+                <p>Remember Me</p>
+              </label>
+            </div>
+
+            <Link href="/forgot-password/email" className="text-custom-blue">
+              Forgot Password?
+            </Link>
+          </div>
+          <div className="flex flex-col w-full gap-4 justify-center items-center">
+            <Button
+              type="submit"
+              className="w-full bg-custom-blue text-white hover:bg-[#043ede] rounded-[10px] hover:text-white h-[55px]"
+              size="lg"
+              disabled={formik.isSubmitting}
+            >
+              Sign in
+            </Button>
+            <p>
+              Don’t have an account?
+              <Link href="/register/agreement" className="text-custom-blue"> Create an account</Link>
+            </p>
+          </div>
+          {successMessage && <p className="text-green-500 text-center">{successMessage}</p>}
+          {errorMessage && <p className="text-red-500 text-center">{errorMessage}</p>}
+        </form>
+
+      </Card>
+
+    </div>
+
+  )
+}
