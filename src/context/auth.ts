@@ -1,6 +1,16 @@
 import { create } from "zustand"
 import Cookies from "js-cookie"
-import { login, logout, refreshToken, register, resetPassword, verificationCheck, verificationSend, verifyToken } from "@/endpoints/auth"
+import {
+  login,
+  logout,
+  refreshToken,
+  register,
+  resetPassword,
+  verificationCheck,
+  verificationSend,
+  verifyToken,
+} from "@/endpoints/auth"
+import { removeTokens } from "@/lib/cookies"
 
 interface AuthResponse {
   data?: any
@@ -14,13 +24,13 @@ interface AuthState {
   isLoading: boolean
   email: string
   codeVerificationPassword: string
-  setCodeVerifcationPassword: (code: string) => void
+  setCodeVerificationPassword: (code: string) => void
   login: (email: string, password: string) => Promise<AuthResponse>
   register: (email: string, password: string, confirmPassword: string) => Promise<AuthResponse>
   logout: (refresh: string) => Promise<AuthResponse>
   verificationSend: (code_type: string, email: string) => Promise<AuthResponse>
   verificationCheck: (code_type: string, email: string, code: string) => Promise<AuthResponse>
-  resetPassword: (email: string, password: string, confirmPassword: string, code: string) => Promise<AuthResponse | any>
+  resetPassword: (email: string, password: string, confirmPassword: string, code: string) => Promise<AuthResponse>
   verifyToken: (token: string) => Promise<void>
   refreshToken: (refresh: string) => Promise<void>
 }
@@ -31,22 +41,24 @@ const useAuthStore = create<AuthState>(set => ({
   isLoading: false,
   email: "",
   codeVerificationPassword: "",
-  setCodeVerifcationPassword: (code) => {
-    set({ codeVerificationPassword: code })
-  },
-  // Login function
-  login: async (email, password) => {
+
+  setCodeVerificationPassword: code => set({ codeVerificationPassword: code }),
+
+  login: async (username, password) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await login(email, password)
-      Cookies.set("access_token", response.data.access, { expires: 1 })
-      Cookies.set("refresh_token", response.data.refresh, { expires: 7 })
+      const response = await login(username, password)
 
-      // Ensure cookies are set properly before setting user state
-      await new Promise(resolve => setTimeout(resolve, 50)) // Optional delay to ensure cookie setting
+      if (response.data.status === "success") {
+        Cookies.set("access_token", response.data.accessToken, { expires: 1 })
+        Cookies.set("refresh_token", response.data.refreshToken, { expires: 7 })
 
-      set({ user: response.data, isLoading: false })
-      return { data: response, error: false }
+        set({ user: response.data, isLoading: false })
+        return { data: response.data, error: false }
+      }
+      else {
+        throw new Error(response.data.message || "Login failed")
+      }
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Login failed", isLoading: false })
@@ -75,9 +87,8 @@ const useAuthStore = create<AuthState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await verificationCheck(code_type, email, code)
-      if (code_type === "reset_password") {
+      if (code_type === "reset_password")
         set({ codeVerificationPassword: code, email })
-      }
       set({ isLoading: false })
       return { data: response.data, error: false }
     }
@@ -91,30 +102,21 @@ const useAuthStore = create<AuthState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await verificationSend(code_type, email)
-
-      if (response.status >= 200 && response.status < 300) {
-        set({ isLoading: false, email })
-        return { data: response.data, error: false }
-      }
-      else {
-        throw new Error(response.statusText || "Unknown error")
-      }
+      set({ isLoading: false, email })
+      return { data: response.data, error: false }
     }
     catch (error: any) {
-      set({
-        error: error.response?.data || "Verification failed",
-        isLoading: false,
-      })
+      set({ error: error.response?.data || "Verification failed", isLoading: false })
       return { error: true, message: error.response?.data || "Verification failed" }
     }
   },
 
-  logout: async (refresh) => {
+  logout: async () => {
     set({ isLoading: true, error: null })
     try {
-      const response = await logout(refresh)
+      removeTokens()
       set({ user: null, isLoading: false })
-      return { data: response.data, error: false }
+      return { data: "Logout successful", error: false }
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Logout failed", isLoading: false })
@@ -126,25 +128,16 @@ const useAuthStore = create<AuthState>(set => ({
     set({ isLoading: true, error: null })
     if (password !== confirmPassword) {
       set({ error: "Passwords do not match", isLoading: false })
-      return
+      return { error: true, message: "Passwords do not match" }
     }
     try {
       const response = await resetPassword(email, password, confirmPassword, code)
-      if (response.status >= 200 && response.status < 300) {
-        set({ isLoading: false, email })
-        return { data: response.data, error: false }
-      }
-      else {
-        throw new Error(response.statusText || "Unknown error")
-      }
+      set({ isLoading: false, email })
+      return { data: response.data, error: false }
     }
     catch (error: any) {
-      console.error("Error detail:", error)
-      set({
-        error: error.response?.data || "Verification failed",
-        isLoading: false,
-      })
-      return { error: true, message: error.response?.data || "Verification failed" }
+      set({ error: error.response?.data || "Password reset failed", isLoading: false })
+      return { error: true, message: error.response?.data || "Password reset failed" }
     }
   },
 

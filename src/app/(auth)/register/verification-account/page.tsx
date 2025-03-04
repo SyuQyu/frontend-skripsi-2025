@@ -33,7 +33,7 @@ export default function VerificationCode() {
 
   const [canResend, setCanResend] = useState<boolean>(true)
 
-  if (!canAccessStep("step4")) {
+  if (!canAccessStep("step3")) {
     router.push("/register/form")
   }
 
@@ -52,7 +52,7 @@ export default function VerificationCode() {
         })
       }
       else {
-        completeStep("step5")
+        completeStep("step4")
         toast({
           icon: <IoMailSharp className="size-6" />,
           title: "Verification Success.",

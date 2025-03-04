@@ -12,8 +12,8 @@ export default function Agreement() {
   const { completeStep, canAccessStep } = useRegisterStep()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  if (!canAccessStep("step2")) {
-    router.push("/register/agreement")
+  if (!canAccessStep("step1")) {
+    router.push("/login")
   }
 
   const handleContinue = () => {
@@ -22,9 +22,9 @@ export default function Agreement() {
 
   const handleModalClose = () => {
     setIsModalOpen(false)
-    completeStep("step3")
+    completeStep("step2")
     setTimeout(() => {
-      router.push("/register/posting-rules/yes") // Navigate to the next step after modal closes
+      router.push("/register/form") // Navigate to the next step after modal closes
     }, 400)
   }
 

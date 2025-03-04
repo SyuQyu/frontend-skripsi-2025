@@ -42,7 +42,7 @@ export default function Form() {
   const { register } = useAuthStore()
   const { toast } = useToast()
 
-  if (!canAccessStep("step3")) {
+  if (!canAccessStep("step2")) {
     router.push("/register/posting-rules")
   }
 
@@ -76,7 +76,7 @@ export default function Form() {
         }
       }
       else {
-        completeStep("step4")
+        completeStep("step3")
         toast({
           icon: (<IoMailSharp className="size-6" />),
           title: "Code sent.",

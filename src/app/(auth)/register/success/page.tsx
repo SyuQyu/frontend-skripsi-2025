@@ -6,7 +6,7 @@ import useRegisterStep from "@/context/registerStep"
 export default function Agreement() {
   const router = useRouter()
   const { canAccessStep } = useRegisterStep()
-  if (!canAccessStep("step5")) {
+  if (!canAccessStep("step4")) {
     router.push("/register/verification-account")
   }
   return (

@@ -1,7 +1,7 @@
 import axiosInstance from "@/lib/axiosInstance"
 
-export function login(email: string, password: string) {
-  return axiosInstance.post("/login", { email, password })
+export function login(username: string, password: string) {
+  return axiosInstance.post("/auth/login", { username, password })
 }
 
 export function register(email: string, password: string, confirm_password: string) {
@@ -9,7 +9,7 @@ export function register(email: string, password: string, confirm_password: stri
 }
 
 export function logout(refresh: string) {
-  return axiosInstance.post("/logout", { refresh })
+  return axiosInstance.post("/auth/logout", { refresh })
 }
 
 export function verificationSend(code_type: string, email: string) {

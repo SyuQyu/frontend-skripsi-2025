@@ -11,17 +11,14 @@ import { useToast } from "@/components/ui/use-toast"
 import { getAccessToken } from "@/lib/cookies"
 
 interface FormValues {
-  email: string
+  username: string
   password: string
 }
 
 function validate(values: FormValues) {
   const errors: Partial<FormValues> = {}
-  if (!values.email) {
-    errors.email = "Required"
-  }
-  else if (!/^[\w.%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
-    errors.email = "Invalid email address"
+  if (!values.username) {
+    errors.username = "Required"
   }
   if (!values.password) {
     errors.password = "Required"
@@ -38,7 +35,7 @@ export default function Login() {
 
   const formik = useFormik({
     initialValues: {
-      email: "",
+      username: "",
       password: "",
     },
     validate,
@@ -46,7 +43,7 @@ export default function Login() {
       setErrors({})
       setSuccessMessage(null)
       setErrorMessage(null)
-      const response = await login(values.email, values.password)
+      const response = await login(values.username, values.password)
       if (response.error) {
         toast({
           icon: (<IoWarningOutline className="size-6" />),
@@ -95,13 +92,13 @@ export default function Login() {
       >
         <form onSubmit={formik.handleSubmit} className="gap-8 flex flex-col">
           <Input
-            label="Email"
-            type="email"
-            name="email"
+            label="Username"
+            type="text"
+            name="username"
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            value={formik.values.email}
-            error={formik.touched.email && formik.errors.email ? formik.errors.email : null}
+            value={formik.values.username}
+            error={formik.touched.username && formik.errors.username ? formik.errors.username : null}
           />
           <Input
             label="Password"
@@ -123,7 +120,7 @@ export default function Login() {
               </label>
             </div>
 
-            <Link href="/forgot-password/email" className="text-custom-blue">
+            <Link href="/forgot-password/username" className="text-custom-blue">
               Forgot Password?
             </Link>
           </div>
@@ -138,7 +135,7 @@ export default function Login() {
             </Button>
             <p>
               Don’t have an account?
-              <Link href="/register/agreement" className="text-custom-blue"> Create an account</Link>
+              <Link href="/register/posting-rules" className="text-custom-blue"> Create an account</Link>
             </p>
           </div>
           {successMessage && <p className="text-green-500 text-center">{successMessage}</p>}
