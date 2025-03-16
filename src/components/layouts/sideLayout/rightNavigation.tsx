@@ -51,15 +51,15 @@ export default function Header() {
   }
 
   return (
-    <div id="sideNavigation">
-      <div className="p-4">
+    <div id="sideNavigationRight">
+      <div className="px-4">
         {/* Tabs */}
         <div className="flex space-x-4 mb-4">
           <button
             className={`py-2 px-4 ${activeTab === "age" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500"}`}
             onClick={() => setActiveTab("age")}
           >
-            By age
+            By Tags
           </button>
           <button
             className={`py-2 px-4 ${activeTab === "people" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500"}`}

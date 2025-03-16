@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import Cookies from "js-cookie"
 import {
+  getLoggedInUserData,
   login,
   logout,
   refreshToken,
@@ -33,6 +34,7 @@ interface AuthState {
   resetPassword: (email: string, password: string, confirmPassword: string, code: string) => Promise<AuthResponse>
   verifyToken: (token: string) => Promise<void>
   refreshToken: (refresh: string) => Promise<void>
+  getLoggedInUser: () => any
 }
 
 const useAuthStore = create<AuthState>(set => ({
@@ -43,6 +45,24 @@ const useAuthStore = create<AuthState>(set => ({
   codeVerificationPassword: "",
 
   setCodeVerificationPassword: code => set({ codeVerificationPassword: code }),
+
+  getLoggedInUser: async () => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await getLoggedInUserData()
+      if (response.data.status === "success") {
+        set({ user: response.data.user, isLoading: false })
+        return response.data.user
+      }
+      else {
+        set({ isLoading: false })
+        throw new Error(response.data.message || "Failed to fetch user")
+      }
+    }
+    catch (error: any) {
+      set({ error: error.response?.data?.message || "Failed to fetch user", isLoading: false })
+    }
+  },
 
   login: async (username, password) => {
     set({ isLoading: true, error: null })

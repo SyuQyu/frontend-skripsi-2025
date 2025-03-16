@@ -31,3 +31,7 @@ export function verifyToken(token: string) {
 export function refreshToken(refresh: string) {
   return axiosInstance.post("/refresh-token", { refresh })
 }
+
+export function getLoggedInUserData() {
+  return axiosInstance.get("/auth/data-logged-in")
+}

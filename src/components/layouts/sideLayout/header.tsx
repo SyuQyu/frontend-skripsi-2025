@@ -48,17 +48,9 @@ export default function Header() {
   }
 
   return (
-    <header id="sideLayoutHeader" className="flex justify-between items-center">
+    <div id="sideLayoutHeader" className="flex justify-between items-center">
       <Link href="/" className="flex flex-row justify-start items-center gap-2">
-        <ImageWithFallback
-          width={0}
-          height={0}
-          sizes="10vw"
-          className="w-8 h-8 object-contain"
-          priority={true}
-          src="/images/Logo.png"
-          alt="Logo"
-        />
+        <p className="text-blue-500 text-xl font-bold">AnonChat</p>
       </Link>
       <Sheet
         button={<HamburgerMenu />}
@@ -114,6 +106,6 @@ export default function Header() {
           </div>
         </div>
       </Sheet>
-    </header>
+    </div>
   )
 }

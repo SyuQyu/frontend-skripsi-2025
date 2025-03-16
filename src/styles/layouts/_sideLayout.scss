@@ -1,14 +1,18 @@
 #sideLayouts {
     @apply relative flex h-auto min-h-screen max-w-[1400px] w-full flex-col xl:flex-row;
-    div#sideNavigation {
-        @apply max-w-[350px] min-h-screen w-full h-16 bg-white flex-col justify-start items-start px-5 py-6 gap-5 hidden sm:hidden xl:flex;
+    div#sideNavigationRight {
+        @apply max-w-[350px] min-h-screen w-full h-16 flex-col justify-start items-start px-5 py-6 gap-5 hidden sm:hidden xl:flex fixed top-0 min-[1700px]:right-[200px] min-[1500px]:right-[70px] min-[1476px]:right-[40px] min-[1380px]:right-[20px] right-[-40px];
     }
 
-    header#sideLayoutHeader {
-        @apply w-full h-16 flex justify-between items-center p-5 sm:flex xl:hidden;
+    div#sideNavigationLeft {
+        @apply max-w-[350px] min-h-screen w-full h-16 flex-col justify-start items-start px-5 py-6 gap-5 hidden sm:hidden xl:flex fixed top-0 min-[1700px]:left-[300px] min-[1500px]:left-[200px] min-[1476px]:left-[150px] min-[1380px]:left-[70px] left-[40px];
     }
 
-    main#mainSideLayouts {
+    div#sideLayoutHeader {
+        @apply w-full h-16 flex justify-between items-center p-5 sm:flex xl:hidden ;
+    }
+
+    div#mainSideLayouts {
         @apply flex-1 w-full h-auto min-h-screen; 
     }
 }

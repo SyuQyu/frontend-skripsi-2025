@@ -5,15 +5,7 @@ export default function Header() {
   return (
     <div id="sideNavigationAuth">
       <Link href="/" className="flex flex-row justify-start items-center gap-2">
-        <ImageWithFallback
-          width={0}
-          height={0}
-          sizes="10vw"
-          className="w-8 h-8 object-contain"
-          priority={true}
-          src="/images/Logo.png"
-          alt="Logo"
-        />
+        <p className="text-blue-500 text-xl font-bold">AnonChat</p>
       </Link>
     </div>
   )

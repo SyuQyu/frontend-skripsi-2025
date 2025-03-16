@@ -6,16 +6,19 @@ import Link from "next/link"
 import { FiLogOut } from "react-icons/fi"
 import { IoLogOut, IoWarningOutline } from "react-icons/io5"
 import { bottomMenuItems, menuItems } from "@/constants/baseRoute"
-import { Button, ImageWithFallback } from "@/components/common"
+import { Button, ImageWithFallback, Input } from "@/components/common"
 import { getRefreshToken, removeTokens } from "@/lib/cookies"
 import useAuthStore from "@/context/auth"
 import { toast } from "@/components/ui/use-toast"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 export default function Header() {
   const pathname = usePathname()
   const { logout } = useAuthStore()
   const router = useRouter()
   const [activePath, setActivePath] = useState("")
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
     setActivePath(pathname)
@@ -47,35 +50,48 @@ export default function Header() {
     }
   }
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/browse/${encodeURIComponent(searchQuery.trim())}`)
+      setIsDialogOpen(false)
+    }
+  }
+
   return (
-    <div id="sideNavigation" className="pt-6 pb-6">
+    <div id="sideNavigationLeft" className="pt-6 pb-6">
       <Link href="/" className="flex flex-row justify-start items-center gap-2 ml-1">
-        <ImageWithFallback
-          width={0}
-          height={0}
-          sizes="10vw"
-          className="w-8 h-8 object-contain"
-          priority={true}
-          src="/images/Logo.png"
-          alt="Logo"
-        />
+        <p className="text-blue-500 text-xl font-bold">AnonChat</p>
       </Link>
       <div className="flex flex-col justify-between h-full w-full">
         <div className="flex flex-col gap-6 justify-start items-start mt-4 ml-2">
           {menuItems.map(({ icon: Icon, label, path }) => (
-            <Link
-              key={label}
-              href={path}
-              className="flex flex-row justify-start items-center gap-3 group"
-            >
-              <Icon
-                className={clsx("h-6 w-6 text-3xl transition-colors duration-200", {
-                  "text-blue-500": activePath === path,
-                  "group-hover:text-blue-500": activePath !== path,
-                })}
-              />
-              <p className="font-normal text-base group-hover:text-blue-500">{label}</p>
-            </Link>
+            label === "Browse"
+              ? (
+                  <button
+                    key={label}
+                    className="flex flex-row justify-start items-center gap-3 group"
+                    onClick={() => setIsDialogOpen(true)}
+                  >
+                    <Icon className="h-6 w-6 text-3xl transition-colors duration-200 group-hover:text-blue-500" />
+                    <p className="font-normal text-base group-hover:text-blue-500">{label}</p>
+                  </button>
+                )
+              : (
+                  <Link
+                    key={label}
+                    href={path}
+                    className="flex flex-row justify-start items-center gap-3 group"
+                  >
+                    <Icon
+                      className={clsx("h-6 w-6 text-3xl transition-colors duration-200", {
+                        "text-blue-500": activePath === path,
+                        "group-hover:text-blue-500": activePath !== path,
+                      })}
+                    />
+                    <p className="font-normal text-base group-hover:text-blue-500">{label}</p>
+                  </Link>
+                )
           ))}
         </div>
         <div className="flex flex-row justify-start items-center gap-3 mt-auto w-full pt-4">
@@ -102,14 +118,39 @@ export default function Header() {
               className="flex flex-row justify-start items-center gap-3 -ml-4 group"
               onClick={handleLogout}
             >
-              <FiLogOut
-                className={clsx("h-6 w-6 text-3xl transition-colors duration-200 group-hover:text-blue-500")}
-              />
+              <FiLogOut className="h-6 w-6 text-3xl transition-colors duration-200 group-hover:text-blue-500" />
               <p className="font-normal text-base group-hover:text-blue-500">Logout</p>
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Dialog for Browse */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Cari</DialogTitle>
+            <DialogDescription>
+              Cari cerita yang kamu inginkan
+            </DialogDescription>
+          </DialogHeader>
+          <form className="w-full flex flex-col gap-4" onSubmit={handleSearch}>
+            <Input
+              className="w-full"
+              isTextarea={false}
+              name="search"
+              placeholder="Carilah cerita yang kamu inginkan..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            <DialogFooter>
+              <Button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded-md">
+                Cari
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
