@@ -11,6 +11,7 @@ import useAuthStore from "@/context/auth"
 import { useToast } from "@/components/ui/use-toast"
 
 interface FormValues {
+  username: string
   email: string
   password: string
   confirmPassword: string
@@ -18,21 +19,32 @@ interface FormValues {
 
 function validate(values: FormValues) {
   const errors: Partial<FormValues> = {}
+
+  if (!values.username) {
+    errors.username = "Required"
+  }
+  else if (!/^\w+$/.test(values.username)) {
+    errors.username = "Username can only contain letters, numbers, and underscores"
+  }
+
   if (!values.email) {
     errors.email = "Required"
   }
   else if (!/^[\w.%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
     errors.email = "Invalid email address"
   }
+
   if (!values.password) {
     errors.password = "Required"
   }
+
   if (!values.confirmPassword) {
     errors.confirmPassword = "Required"
   }
   else if (values.password !== values.confirmPassword) {
     errors.confirmPassword = "Passwords must match"
   }
+
   return errors
 }
 
@@ -51,6 +63,7 @@ export default function Form() {
 
   const formik = useFormik({
     initialValues: {
+      username: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -58,22 +71,14 @@ export default function Form() {
     validate,
     onSubmit: async (values, { setSubmitting }) => {
       setEmailError(null)
-      const response = await register(values.email, values.password, values.confirmPassword)
+      const response = await register(values.username, values.email, values.password, values.confirmPassword)
+
       if (response.error) {
-        if (response.message?.email[0]) {
-          toast({
-            icon: (<IoWarningOutline className="size-6" />),
-            title: "Registration failed.",
-            description: response.message?.email[0],
-          })
-        }
-        else {
-          toast({
-            icon: (<IoWarningOutline className="size-6" />),
-            title: "Registration failed.",
-            description: "An unexpected error occurred. Please try again later.",
-          })
-        }
+        toast({
+          icon: (<IoWarningOutline className="size-6" />),
+          title: "Registration failed.",
+          description: response.message?.email?.[0] || "An unexpected error occurred. Please try again later.",
+        })
       }
       else {
         completeStep("step3")
@@ -83,7 +88,8 @@ export default function Form() {
           description: "Please check your email or spam folder for the code. Thanks for your patience.",
         })
         setTimeout(() => {
-          router.push("/register/verification-account")
+          // router.push("/register/verification-account")
+          router.push("/login")
         }, 400)
 
         setSubmitting(false)
@@ -91,10 +97,9 @@ export default function Form() {
     },
   })
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     formik.handleChange(e)
-    const strength = getPasswordStrength(e.target.value)
-    setPasswordStrength(strength)
+    setPasswordStrength(getPasswordStrength(e.target.value))
   }
 
   return (
@@ -116,6 +121,15 @@ export default function Form() {
       >
         <form onSubmit={formik.handleSubmit} className="gap-8 flex flex-col">
           <Input
+            label="Username"
+            type="text"
+            name="username"
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            value={formik.values.username}
+            error={formik.touched.username && formik.errors.username ? formik.errors.username : null}
+          />
+          <Input
             label="Email"
             type="email"
             name="email"
@@ -134,11 +148,7 @@ export default function Form() {
               value={formik.values.password}
               error={formik.touched.password && formik.errors.password ? formik.errors.password : null}
             />
-            {
-              formik.values.password && (
-                <StrengthBarPassword strength={passwordStrength} />
-              )
-            }
+            {formik.values.password && <StrengthBarPassword strength={passwordStrength} />}
           </div>
           <Input
             label="Confirm Password"

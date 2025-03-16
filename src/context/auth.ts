@@ -27,7 +27,7 @@ interface AuthState {
   codeVerificationPassword: string
   setCodeVerificationPassword: (code: string) => void
   login: (email: string, password: string) => Promise<AuthResponse>
-  register: (email: string, password: string, confirmPassword: string) => Promise<AuthResponse>
+  register: (username: string, email: string, password: string, confirmPassword: string) => Promise<AuthResponse>
   logout: (refresh: string) => Promise<AuthResponse>
   verificationSend: (code_type: string, email: string) => Promise<AuthResponse>
   verificationCheck: (code_type: string, email: string, code: string) => Promise<AuthResponse>
@@ -86,14 +86,16 @@ const useAuthStore = create<AuthState>(set => ({
     }
   },
 
-  register: async (email, password, confirmPassword) => {
+  register: async (username, email, password, confirmPassword) => {
     set({ isLoading: true, error: null })
+
     if (password !== confirmPassword) {
       set({ error: "Passwords do not match", isLoading: false })
       return { error: true, message: "Passwords do not match" }
     }
+
     try {
-      const response = await register(email, password, confirmPassword)
+      const response = await register(username, email, password)
       set({ user: response.data, isLoading: false, email })
       return { data: response.data, error: false }
     }

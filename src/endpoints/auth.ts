@@ -4,8 +4,8 @@ export function login(username: string, password: string) {
   return axiosInstance.post("/auth/login", { username, password })
 }
 
-export function register(email: string, password: string, confirm_password: string) {
-  return axiosInstance.post("/users", { email, password, confirm_password })
+export function register(username: string, email: string, password: string) {
+  return axiosInstance.post("/auth/register", { username, email, password })
 }
 
 export function logout(refresh: string) {
