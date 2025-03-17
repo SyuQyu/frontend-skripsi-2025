@@ -1,6 +1,7 @@
 "use client"
 import { useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
 import { getAccessToken } from "@/lib/cookies"
 import { Card, PostCard } from "@/components/common"
 import usePostStore from "@/context/post"
@@ -34,7 +35,9 @@ export default function Home() {
             {/* Gunakan keyword yang sudah didekode */}
           </div>
           {posts.map((post, idx) => (
-            <PostCard key={idx} post={post} />
+            <Link key={idx} href={`/post/${post.id}`}>
+              <PostCard key={idx} post={post} />
+            </Link>
           ))}
         </div>
       </Card>

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { useFormik } from "formik"
 import { useRouter } from "next/navigation"
 import { IoWarningOutline } from "react-icons/io5"
+import Link from "next/link"
 import { getAccessToken } from "@/lib/cookies"
 import { Button, Card, Input, PostCard } from "@/components/common"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -119,7 +120,9 @@ export default function Home() {
             </div>
           </div>
           {posts.map((post, idx) => (
-            <PostCard key={idx} post={post} />
+            <Link key={idx} href={`/post/${post.id}`}>
+              <PostCard key={idx} post={post} />
+            </Link>
           ))}
         </div>
       </Card>

@@ -1,22 +1,26 @@
 "use client"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useFormik } from "formik"
 import { useParams, useRouter } from "next/navigation"
-import Link from "next/link"
+import { IoWarningOutline } from "react-icons/io5"
 import { getAccessToken } from "@/lib/cookies"
-import { Card, PostCard } from "@/components/common"
+import { Button, Card, Input, PostCard } from "@/components/common"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import usePostStore from "@/context/post"
+import useAuthStore from "@/context/auth"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function Home() {
   const router = useRouter()
-  const { fetchPostByTags, posts } = usePostStore()
-  const params = useParams<{ tags: string }>()
+  const { fetchAllPosts, fetchPostById, selectedPost } = usePostStore()
+  const params = useParams<{ postId: string }>()
   useEffect(() => {
-    fetchPostByTags(params.tags)
+    fetchPostById(params.postId)
     const accessToken = getAccessToken()
     if (!accessToken) {
       router.push("/login")
     }
-  }, [router, fetchPostByTags])
+  }, [router, fetchAllPosts])
 
   return (
     <div className="flex flex-row justify-center items-center">
@@ -28,13 +32,10 @@ export default function Home() {
       >
         <div className="max-w-2xl mx-auto pb-8">
           <div className="mb-4">
-            <p className="text-xl text-blue-600">{params.tags}</p>
+            <div className="mt-4 w-full">
+            </div>
           </div>
-          {posts.map((post, idx) => (
-            <Link key={idx} href={`/post/${post.id}`}>
-              <PostCard key={idx} post={post} />
-            </Link>
-          ))}
+          <PostCard post={selectedPost} detail={true} />
         </div>
       </Card>
     </div>

@@ -1,20 +1,13 @@
 "use client"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
+import useTagStore from "@/context/tags"
+import { getAccessToken } from "@/lib/cookies"
 
 interface Option {
   label: string
   value: string
 }
-
-const ageOptions: Option[] = [
-  { label: "0-1 years old", value: "0-1" },
-  { label: "1-2 years old", value: "1-2" },
-  { label: "2-4 years old", value: "2-4" },
-  { label: "4-6 years old", value: "4-6" },
-  { label: "6-8 years old", value: "6-8" },
-  { label: "8-10 years old", value: "8-10" },
-  { label: "10-12 years old", value: "10-12" },
-]
 
 const peopleOptions: Option[] = [
   { label: "Just Me", value: "justme" },
@@ -25,16 +18,26 @@ const peopleOptions: Option[] = [
   { label: "My step-mother", value: "mystepmother" },
   { label: "My grandfather", value: "mygrandfather" },
   { label: "My grandmother", value: "mygrandmother" },
-  // Add more people options here
 ]
 
 export default function Header() {
-  const [activeTab, setActiveTab] = useState<"age" | "people">("age")
+  const [activeTab, setActiveTab] = useState<"tags" | "people">("tags")
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedOption, setSelectedOption] = useState<Option | null>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const { fetchPopularTags, popularTags } = useTagStore()
+  const router = useRouter()
 
-  const options = activeTab === "age" ? ageOptions : peopleOptions
+  useEffect(() => {
+    fetchPopularTags()
+    const accessToken = getAccessToken()
+    if (!accessToken) {
+      router.push("/login")
+    }
+  }, [router, fetchPopularTags])
+
+  const tagOptions: Option[] = popularTags.map(tag => ({ label: tag.tag, value: tag.id }))
+  const options = activeTab === "tags" ? tagOptions : peopleOptions
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value)
@@ -48,6 +51,9 @@ export default function Header() {
     setSelectedOption(option)
     setSearchTerm("") // Clear the search input when an option is selected
     setIsDropdownOpen(false) // Optionally close dropdown after selection
+    if (activeTab === "tags") {
+      router.push(`/tags/${option.label}`)
+    }
   }
 
   return (
@@ -56,8 +62,8 @@ export default function Header() {
         {/* Tabs */}
         <div className="flex space-x-4 mb-4">
           <button
-            className={`py-2 px-4 ${activeTab === "age" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500"}`}
-            onClick={() => setActiveTab("age")}
+            className={`py-2 px-4 ${activeTab === "tags" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500"}`}
+            onClick={() => setActiveTab("tags")}
           >
             By Tags
           </button>
@@ -65,7 +71,7 @@ export default function Header() {
             className={`py-2 px-4 ${activeTab === "people" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500"}`}
             onClick={() => setActiveTab("people")}
           >
-            By people
+            By People
           </button>
         </div>
 

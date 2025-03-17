@@ -19,6 +19,7 @@ interface InputCustomProps {
   disabled?: boolean
   isTextarea?: boolean
   length?: string
+  autoFocus?: boolean
 }
 
 export default function InputCustom({
@@ -36,6 +37,7 @@ export default function InputCustom({
   disabled,
   isTextarea = false,
   length = "",
+  autoFocus = false,
 }: InputCustomProps) {
   const [isFocused, setIsFocused] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -58,6 +60,7 @@ export default function InputCustom({
         {isTextarea
           ? (
               <Textarea
+                autoFocus={autoFocus && !disabled}
                 placeholder={placeholder}
                 value={value}
                 name={name}
@@ -75,6 +78,7 @@ export default function InputCustom({
             )
           : (
               <input
+                autoFocus={autoFocus && !disabled}
                 type={type === "password" && !showPassword ? "password" : "text"}
                 placeholder={placeholder}
                 value={value}
