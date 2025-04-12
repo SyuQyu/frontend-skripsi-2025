@@ -31,9 +31,7 @@ export default function Home() {
             <p className="text-xl text-blue-600">{params.tags}</p>
           </div>
           {posts.map((post, idx) => (
-            <Link key={idx} href={`/post/${post.id}`}>
-              <PostCard key={idx} post={post} />
-            </Link>
+            <PostCard key={idx} post={post} />
           ))}
         </div>
       </Card>

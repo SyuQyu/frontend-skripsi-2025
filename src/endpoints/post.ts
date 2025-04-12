@@ -1,4 +1,4 @@
-import axiosInstance from "@/lib/axiosInstance"
+import { fetchInstance } from "@/lib/fetchInstance"
 
 interface PostPayload {
   content: string
@@ -6,29 +6,48 @@ interface PostPayload {
 }
 
 export function createPost(payload: PostPayload) {
-  return axiosInstance.post("/posts", payload)
+  return fetchInstance("/posts", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
 }
 
 export function getAllPosts() {
-  return axiosInstance.get("/posts/all")
+  return fetchInstance("/posts/all")
+}
+
+export function getPostByUser(userId: string) {
+  return fetchInstance(`/posts/user/${encodeURIComponent(userId)}`)
 }
 
 export function getPostByTags(tagName: string) {
-  return axiosInstance.get(`/posts/tag/${tagName}`)
+  return fetchInstance(`/posts/tag/${encodeURIComponent(tagName)}`)
 }
 
 export function getPostByContent(content: string) {
-  return axiosInstance.get(`/posts/search/${content}`)
+  return fetchInstance(`/posts/search/${encodeURIComponent(content)}`)
 }
 
 export function getPostById(postId: string) {
-  return axiosInstance.get(`/posts/${postId}`)
+  return fetchInstance(`/posts/${postId}`)
+}
+
+export function checkWord(text: string) {
+  return fetchInstance("/posts/check/word", {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  })
 }
 
 export function updatePost(postId: string, payload: PostPayload) {
-  return axiosInstance.put(`/posts/${postId}`, payload)
+  return fetchInstance(`/posts/${postId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  })
 }
 
 export function deletePost(postId: string) {
-  return axiosInstance.delete(`/posts/${postId}`)
+  return fetchInstance(`/posts/${postId}`, {
+    method: "DELETE",
+  })
 }

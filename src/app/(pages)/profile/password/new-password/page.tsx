@@ -43,10 +43,12 @@ export default function ChangePassword() {
     },
   })
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    formik.handleChange(e)
-    const strength = getPasswordStrength(e.target.value)
-    setPasswordStrength(strength)
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.target instanceof HTMLInputElement) {
+      formik.handleChange(e)
+      const strength = getPasswordStrength(e.target.value)
+      setPasswordStrength(strength)
+    }
   }
 
   return (

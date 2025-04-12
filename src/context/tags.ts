@@ -20,7 +20,7 @@ const useTagStore = create<TagState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await getAllTags()
-      set({ tags: response.data.tags, isLoading: false })
+      set({ tags: response.tags, isLoading: false })
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to fetch tags", isLoading: false })
@@ -31,7 +31,7 @@ const useTagStore = create<TagState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await getPopularTags()
-      set({ popularTags: response.data.tags, isLoading: false })
+      set({ popularTags: response.tags, isLoading: false })
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to fetch popular tags", isLoading: false })

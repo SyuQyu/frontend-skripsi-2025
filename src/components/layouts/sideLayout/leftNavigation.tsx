@@ -3,10 +3,9 @@ import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import clsx from "clsx"
 import Link from "next/link"
-import { FiLogOut } from "react-icons/fi"
-import { IoLogOut, IoWarningOutline } from "react-icons/io5"
+import { LogOut, X } from "lucide-react"
 import { bottomMenuItems, menuItems } from "@/constants/baseRoute"
-import { Button, ImageWithFallback, Input } from "@/components/common"
+import { Button, Input } from "@/components/common"
 import { getRefreshToken, removeTokens } from "@/lib/cookies"
 import useAuthStore from "@/context/auth"
 import { toast } from "@/components/ui/use-toast"
@@ -33,14 +32,14 @@ export default function Header() {
     const response = await logout(refreshToken)
     if (response.error) {
       toast({
-        icon: (<IoWarningOutline className="size-6" />),
+        icon: (<X className="size-6" />),
         title: "Logout failed.",
         description: response.message.detail,
       })
     }
     else {
       toast({
-        icon: (<IoLogOut className="size-6 text-green-600" />),
+        icon: (<LogOut className="size-6 text-green-600" />),
         title: "Logout Success.",
       })
       removeTokens()
@@ -118,7 +117,7 @@ export default function Header() {
               className="flex flex-row justify-start items-center gap-3 -ml-4 group"
               onClick={handleLogout}
             >
-              <FiLogOut className="h-6 w-6 text-3xl transition-colors duration-200 group-hover:text-blue-500" />
+              <LogOut className="h-6 w-6 text-3xl transition-colors duration-200 group-hover:text-blue-500" />
               <p className="font-normal text-base group-hover:text-blue-500">Logout</p>
             </Button>
           </div>

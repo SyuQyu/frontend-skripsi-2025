@@ -1,8 +1,8 @@
 "use client"
 import { useFormik } from "formik"
 import { useRouter } from "next/navigation"
-import { IoMailSharp, IoWarningOutline } from "react-icons/io5"
 import { useState } from "react"
+import { Mail, X } from "lucide-react"
 import { Button, Card, OTPInput } from "@/components/common"
 import useRegisterStep from "@/context/registerStep"
 import useAuthStore from "@/context/auth"
@@ -46,7 +46,7 @@ export default function VerificationCode() {
       const response = await verificationCheck("account_verification", email, values.otp)
       if (response.error) {
         toast({
-          icon: (<IoWarningOutline className="size-6" />),
+          icon: (<X className="size-6" />),
           title: "Verification failed.",
           description: "It looks like the code is incorrect. Please check and try again",
         })
@@ -54,7 +54,7 @@ export default function VerificationCode() {
       else {
         completeStep("step4")
         toast({
-          icon: <IoMailSharp className="size-6" />,
+          icon: <Mail className="size-6" />,
           title: "Verification Success.",
         })
         setTimeout(() => {
@@ -74,14 +74,14 @@ export default function VerificationCode() {
     const response = await verificationSend("account_verification", email)
     if (response.error) {
       toast({
-        icon: (<IoWarningOutline className="size-6" />),
+        icon: (<X className="size-6" />),
         title: "Resend failed.",
         description: "An unexpected error occurred. Please try again later.",
       })
     }
     else {
       toast({
-        icon: <IoMailSharp className="size-6" />,
+        icon: <Mail className="size-6" />,
         title: "Verification code resent.",
         description: "Please check your email or spam folder for the code. Thanks for your patience",
       })

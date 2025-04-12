@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { ImageWithFallback } from "@/components/common"
 
 export default function Header() {
   return (

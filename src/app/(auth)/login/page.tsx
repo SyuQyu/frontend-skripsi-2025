@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react"
 import { useFormik } from "formik"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { IoCheckmark, IoWarningOutline } from "react-icons/io5"
+import { Check, X } from "lucide-react"
 import { Button, Card, Input } from "@/components/common"
 import { Checkbox } from "@/components/ui/checkbox"
 import useAuthStore from "@/context/auth"
@@ -46,14 +46,14 @@ export default function Login() {
       const response = await login(values.username, values.password)
       if (response.error) {
         toast({
-          icon: (<IoWarningOutline className="size-6" />),
+          icon: (<X className="size-6" />),
           title: "Login failed.",
           description: response.message.detail,
         })
       }
       else {
         toast({
-          icon: (<IoCheckmark className="size-6 text-green-600" />),
+          icon: (<Check className="size-6 text-green-600" />),
           title: "Login Success.",
         })
         router.push(`/`)

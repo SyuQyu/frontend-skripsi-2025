@@ -3,7 +3,7 @@ import React, { useState } from "react"
 import { useFormik } from "formik"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { IoMailSharp, IoWarningOutline } from "react-icons/io5"
+import { Mail, X } from "lucide-react"
 import { Button, Card, Input, StrengthBarPassword } from "@/components/common"
 import { getPasswordStrength } from "@/lib/utils"
 import useRegisterStep from "@/context/registerStep"
@@ -75,7 +75,7 @@ export default function Form() {
 
       if (response.error) {
         toast({
-          icon: (<IoWarningOutline className="size-6" />),
+          icon: (<X className="size-6" />),
           title: "Registration failed.",
           description: response.message?.email?.[0] || "An unexpected error occurred. Please try again later.",
         })
@@ -83,7 +83,7 @@ export default function Form() {
       else {
         completeStep("step3")
         toast({
-          icon: (<IoMailSharp className="size-6" />),
+          icon: (<Mail className="size-6" />),
           title: "Code sent.",
           description: "Please check your email or spam folder for the code. Thanks for your patience.",
         })

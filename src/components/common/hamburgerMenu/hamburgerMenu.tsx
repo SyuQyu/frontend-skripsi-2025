@@ -1,5 +1,5 @@
+import { Menu } from "lucide-react"
 import React from "react"
-import { IoMenu } from "react-icons/io5"
 
 export default function HamburgerMenu() {
   return (
@@ -7,7 +7,7 @@ export default function HamburgerMenu() {
       id="toggleMenu"
       className="w-auto h-auto flex justify-center items-center"
     >
-      <IoMenu size={24} className="transition-transform duration-150" />
+      <Menu size={24} className="transition-transform duration-150" />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 import { useFormik } from "formik"
 import { useRouter } from "next/navigation"
-import { IoMailSharp, IoWarningOutline } from "react-icons/io5"
+import { Mail, X } from "lucide-react"
 import { Button, Card, Input } from "@/components/common"
 import { useToast } from "@/components/ui/use-toast"
 import useForgotPasswordStep from "@/context/forgotPasswordStep"
@@ -43,7 +43,7 @@ export default function ForgotPassword() {
       const res: any = await verificationSend("reset_password", values.email)
       if (res.message?.email) {
         toast({
-          icon: (<IoWarningOutline className="size-6" />),
+          icon: (<X className="size-6" />),
           title: "Code sent failed.",
           description: "It looks like the email is incorrect. Please check and try again",
         })
@@ -52,7 +52,7 @@ export default function ForgotPassword() {
       else {
         completeStep("step2")
         toast({
-          icon: (<IoMailSharp className="size-6" />),
+          icon: (<Mail className="size-6" />),
           title: "Code sent.",
           description: "Please check your email or spam folder for the code. Thanks for your patience.",
         })

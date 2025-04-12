@@ -1,11 +1,13 @@
 import { create } from "zustand"
 import {
+  checkWord,
   createPost,
   deletePost,
   getAllPosts,
   getPostByContent,
   getPostById,
   getPostByTags,
+  getPostByUser,
   updatePost,
 } from "@/endpoints/post"
 
@@ -26,6 +28,8 @@ interface PostState {
   removePost: (postId: string) => Promise<void>
   fetchPostByTags: (tagName: string) => Promise<void>
   searchPostByContent: (content: string) => Promise<void>
+  fetchPostByUser: (userId: string) => Promise<void>
+  checkWord: (text: string) => Promise<void>
 }
 
 const usePostStore = create<PostState>(set => ({
@@ -38,7 +42,7 @@ const usePostStore = create<PostState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await getAllPosts()
-      set({ posts: response.data.posts, isLoading: false })
+      set({ posts: response.posts, isLoading: false })
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to fetch posts", isLoading: false })
@@ -49,7 +53,30 @@ const usePostStore = create<PostState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await getPostByTags(tagName)
-      set({ posts: response.data.posts, isLoading: false })
+      set({ posts: response.posts, isLoading: false })
+    }
+    catch (error: any) {
+      set({ error: error.response?.data?.message || "Failed to fetch posts", isLoading: false })
+    }
+  },
+
+  checkWord: async (text) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await checkWord(text)
+      set({ isLoading: false })
+      return response
+    }
+    catch (error: any) {
+      set({ error: error.response?.data?.message || "Failed to fetch posts", isLoading: false })
+    }
+  },
+
+  fetchPostByUser: async (userId) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await getPostByUser(userId)
+      set({ posts: response.posts, isLoading: false })
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to fetch posts", isLoading: false })
@@ -60,7 +87,7 @@ const usePostStore = create<PostState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await getPostByContent(content)
-      set({ posts: response.data.posts, isLoading: false })
+      set({ posts: response.posts, isLoading: false })
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to fetch posts", isLoading: false })
@@ -71,7 +98,7 @@ const usePostStore = create<PostState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await getPostById(postId)
-      set({ selectedPost: response.data.post, isLoading: false })
+      set({ selectedPost: response.post, isLoading: false })
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to fetch post", isLoading: false })

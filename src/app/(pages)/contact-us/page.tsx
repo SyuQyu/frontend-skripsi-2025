@@ -4,7 +4,7 @@ import { useFormik } from "formik"
 import clsx from "clsx"
 import { useRouter } from "next/navigation"
 import useContactUsStep from "@/context/contactUsStep"
-import { Button, Card, Input, TextArea } from "@/components/common"
+import { Button, Card, Input } from "@/components/common"
 
 interface FormValues {
   first_name: string
@@ -55,7 +55,7 @@ export default function Contact() {
 
   const isFormValid
     = Object.values(formik.values).every(value => value !== "")
-    && Object.keys(formik.errors).length === 0
+      && Object.keys(formik.errors).length === 0
 
   return (
     <div className="flex flex-row justify-center items-center">
@@ -97,15 +97,6 @@ export default function Contact() {
             onBlur={formik.handleBlur}
             value={formik.values.subject}
             error={formik.touched.subject && formik.errors.subject ? formik.errors.subject : null}
-          />
-          <TextArea
-            label="Message"
-            name="message"
-            placeholder="Add your message here..."
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            value={formik.values.message}
-            error={formik.touched.message && formik.errors.message ? formik.errors.message : null}
           />
           <Button
             type="submit"

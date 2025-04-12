@@ -1,12 +1,20 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useFormik } from "formik"
 import { useRouter } from "next/navigation"
-import { IoWarningOutline } from "react-icons/io5"
-import Link from "next/link"
+import { Check, X } from "lucide-react"
+
 import { getAccessToken } from "@/lib/cookies"
 import { Button, Card, Input, PostCard } from "@/components/common"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import usePostStore from "@/context/post"
 import useAuthStore from "@/context/auth"
 import { useToast } from "@/components/ui/use-toast"
@@ -14,16 +22,19 @@ import { useToast } from "@/components/ui/use-toast"
 export default function Home() {
   const router = useRouter()
   const { toast } = useToast()
-  const { fetchAllPosts, posts, addPost } = usePostStore()
+  const { fetchAllPosts, posts, addPost, checkWord } = usePostStore()
   const { user } = useAuthStore()
-  const [isDialogOpen, setIsDialogOpen] = useState(false) // Control dialog visibility
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   useEffect(() => {
-    fetchAllPosts()
+    const fetchData = async () => {
+      await fetchAllPosts()
+    }
     const accessToken = getAccessToken()
     if (!accessToken) {
       router.push("/login")
     }
+    fetchData()
   }, [router, fetchAllPosts])
 
   const formik = useFormik({
@@ -47,18 +58,18 @@ export default function Home() {
 
         await addPost(payload)
         toast({
-          icon: <IoWarningOutline className="size-6 text-green-500" />,
+          icon: <Check className="size-6 text-green-500" />,
           title: "Post Successful",
           description: "Your story has been shared!",
         })
 
-        resetForm() // Reset form after posting
-        fetchAllPosts() // Refresh posts
-        setIsDialogOpen(false) // Close dialog
+        resetForm()
+        fetchAllPosts()
+        setIsDialogOpen(false)
       }
       catch {
         toast({
-          icon: <IoWarningOutline className="size-6 text-red-500" />,
+          icon: <X className="size-6 text-red-500" />,
           title: "Post Failed",
           description: "Something went wrong. Please try again.",
         })
@@ -68,6 +79,26 @@ export default function Home() {
       }
     },
   })
+
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const rawValue = e.target.value
+    formik.setFieldValue("content", rawValue) // langsung update UI dulu
+
+    if (debounceRef.current)
+      clearTimeout(debounceRef.current)
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const result: any = await checkWord(rawValue)
+        formik.setFieldValue("content", result.filtered)
+      }
+      catch (error) {
+        console.error("Filtering failed:", error)
+      }
+    }, 500) // debounce selama 500ms
+  }
 
   return (
     <div className="flex flex-row justify-center items-center">
@@ -99,9 +130,13 @@ export default function Home() {
                       isTextarea={true}
                       name="content"
                       value={formik.values.content}
-                      onChange={formik.handleChange}
+                      onChange={handleInputChange} // Ganti handler
                       onBlur={formik.handleBlur}
-                      error={formik.touched.content && formik.errors.content ? formik.errors.content : null}
+                      error={
+                        formik.touched.content && formik.errors.content
+                          ? formik.errors.content
+                          : null
+                      }
                       length={formik.values.content.length.toString()}
                       placeholder="Share your story..."
                     />
@@ -120,9 +155,7 @@ export default function Home() {
             </div>
           </div>
           {posts.map((post, idx) => (
-            <Link key={idx} href={`/post/${post.id}`}>
-              <PostCard key={idx} post={post} />
-            </Link>
+            <PostCard key={idx} post={post} />
           ))}
         </div>
       </Card>

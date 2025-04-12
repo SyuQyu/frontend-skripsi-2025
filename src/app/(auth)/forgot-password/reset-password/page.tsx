@@ -3,7 +3,7 @@ import type { FormikErrors } from "formik"
 import { useFormik } from "formik"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { IoMailSharp, IoWarningOutline } from "react-icons/io5"
+import { Mail, X } from "lucide-react"
 import { Button, Card, Input, StrengthBarPassword } from "@/components/common"
 import { getPasswordStrength } from "@/lib/utils"
 import useForgotPasswordStep from "@/context/forgotPasswordStep"
@@ -49,7 +49,7 @@ export default function ChangePassword() {
       const res = await resetPassword(email, values.password, values.confirmPassword, codeVerificationPassword)
       if (res.message?.code) {
         toast({
-          icon: (<IoWarningOutline className="size-6" />),
+          icon: (<X className="size-6" />),
           title: "Code validation failed.",
           description: "It looks like the code is incorrect. Please check and try again",
         })
@@ -57,7 +57,7 @@ export default function ChangePassword() {
       }
       else {
         toast({
-          icon: (<IoMailSharp className="size-6" />),
+          icon: (<Mail className="size-6" />),
           title: "Reset success.",
           description: "Your password has been successfully reset. Redirecting to login.",
         })
@@ -69,10 +69,12 @@ export default function ChangePassword() {
     },
   })
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     formik.handleChange(e)
-    const strength = getPasswordStrength(e.target.value)
-    setPasswordStrength(strength)
+    if (e.target instanceof HTMLInputElement) {
+      const strength = getPasswordStrength(e.target.value)
+      setPasswordStrength(strength)
+    }
   }
 
   return (

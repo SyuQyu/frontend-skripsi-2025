@@ -1,11 +1,11 @@
-import { FiHome, FiMail, FiSearch, FiUser } from "react-icons/fi"
+import { Home, Mail, Search, User } from "lucide-react"
 
 export const menuItems = [
-  { icon: FiHome, label: "Home", path: "/" },
-  { icon: FiSearch, label: "Browse", path: "/browse" },
-  { icon: FiUser, label: "Account", path: "/account" },
+  { icon: Home, label: "Home", path: "/" },
+  { icon: Search, label: "Browse", path: "/browse" },
+  { icon: User, label: "Profile", path: "/profile" },
 ]
 
 export const bottomMenuItems = [
-  { icon: FiMail, label: "Contact", path: "/contact-us" },
+  { icon: Mail, label: "Contact", path: "/contact-us" },
 ]

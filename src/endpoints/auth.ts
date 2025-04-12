@@ -1,37 +1,75 @@
-import axiosInstance from "@/lib/axiosInstance"
+import { fetchInstance } from "@/lib/fetchInstance"
 
 export function login(username: string, password: string) {
-  return axiosInstance.post("/auth/login", { username, password })
+  return fetchInstance("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+  })
 }
 
 export function register(username: string, email: string, password: string) {
-  return axiosInstance.post("/auth/register", { username, email, password })
+  return fetchInstance("/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ username, email, password }),
+  })
 }
 
 export function logout(refresh: string) {
-  return axiosInstance.post("/auth/logout", { refresh })
+  return fetchInstance("/auth/logout", {
+    method: "POST",
+    body: JSON.stringify({ refresh }),
+  })
 }
 
 export function verificationSend(code_type: string, email: string) {
-  return axiosInstance.post("/verification/send", { code_type, email })
+  return fetchInstance("/verification/send", {
+    method: "POST",
+    body: JSON.stringify({ code_type, email }),
+  })
 }
 
 export function verificationCheck(code_type: string, email: string, code: string) {
-  return axiosInstance.post("/verification/verify", { code_type, email, code })
+  return fetchInstance("/verification/verify", {
+    method: "POST",
+    body: JSON.stringify({ code_type, email, code }),
+  })
 }
 
-export function resetPassword(email: string, password: string, confirm_password: string, code: string) {
-  return axiosInstance.post("/reset-password", { email, password, confirm_password, code })
-}
+// export function resetPassword(email: string, password: string, confirm_password: string, code: string) {
+//   return fetchInstance("/reset-password", {
+//     method: "POST",
+//     body: JSON.stringify({ email, password, confirm_password, code }),
+//   })
+// }
 
 export function verifyToken(token: string) {
-  return axiosInstance.post("/verify-token", { token })
+  return fetchInstance("/verify-token", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  })
 }
 
 export function refreshToken(refresh: string) {
-  return axiosInstance.post("/refresh-token", { refresh })
+  return fetchInstance("/refresh-token", {
+    method: "POST",
+    body: JSON.stringify({ refresh }),
+  })
 }
 
 export function getLoggedInUserData() {
-  return axiosInstance.get("/auth/data-logged-in")
+  return fetchInstance("/auth/data-logged-in")
+}
+
+export function checkPassword(userId: string, password: string) {
+  return fetchInstance("/auth/check-password", {
+    method: "POST",
+    body: JSON.stringify({ userId, password }),
+  })
+}
+
+export function resetPassword(userId: string, password: string) {
+  return fetchInstance("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ userId, password }),
+  })
 }

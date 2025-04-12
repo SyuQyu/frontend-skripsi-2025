@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from "react"
 import clsx from "clsx"
-import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5"
+import { LockKeyhole, LockOpen } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 
 interface InputCustomProps {
@@ -49,7 +49,7 @@ export default function InputCustom({
   return (
     <div className={clsx("w-full flex flex-col gap-2", className)} style={style}>
       {label && (
-        <label className="text-lg font-bold text-black">{label}</label>
+        <label className="text-base font-bold text-black">{label}</label>
       )}
       <div className={clsx(
         "flex items-center rounded-md",
@@ -97,7 +97,7 @@ export default function InputCustom({
             )}
         {type === "password" && !disabled && !isTextarea && (
           <span className="px-2 cursor-pointer" onClick={handleTogglePasswordVisibility}>
-            {showPassword ? <IoEyeOffOutline /> : <IoEyeOutline />}
+            {showPassword ? <LockOpen /> : <LockKeyhole />}
           </span>
         )}
         {icon && type !== "password" && !isTextarea && (

@@ -35,9 +35,7 @@ export default function Home() {
             {/* Gunakan keyword yang sudah didekode */}
           </div>
           {posts.map((post, idx) => (
-            <Link key={idx} href={`/post/${post.id}`}>
-              <PostCard key={idx} post={post} />
-            </Link>
+            <PostCard key={idx} post={post} />
           ))}
         </div>
       </Card>

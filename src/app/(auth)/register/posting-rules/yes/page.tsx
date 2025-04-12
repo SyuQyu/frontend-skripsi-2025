@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
-import { FaChevronDown } from "react-icons/fa" // Importing a dropdown icon
+import { ChevronDown } from "lucide-react"
 import { Card } from "@/components/common"
 
 interface Option {
@@ -60,7 +60,7 @@ export default function Agreement() {
                   </option>
                 ))}
               </select>
-              <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-2xl opacity-30" />
+              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-2xl opacity-30" />
             </div>
 
             <div className="flex flex-col gap-4 mt-4">

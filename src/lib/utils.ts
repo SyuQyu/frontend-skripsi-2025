@@ -17,6 +17,9 @@ export function getPasswordStrength(password: string) {
 }
 
 export function timeAgo(createdAt: any) {
+  if (!createdAt || Number.isNaN(new Date(createdAt).getTime())) {
+    return "Unknown time"
+  }
   const createdDate = new Date(createdAt)
   const now = new Date()
   const diffInSeconds = Math.floor((now.getTime() - createdDate.getTime()) / 1000)

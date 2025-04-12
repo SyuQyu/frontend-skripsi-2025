@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react"
 import { useFormik } from "formik"
 import { useParams, useRouter } from "next/navigation"
-import { IoWarningOutline } from "react-icons/io5"
 import { getAccessToken } from "@/lib/cookies"
 import { Button, Card, Input, PostCard } from "@/components/common"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -15,11 +14,15 @@ export default function Home() {
   const { fetchAllPosts, fetchPostById, selectedPost } = usePostStore()
   const params = useParams<{ postId: string }>()
   useEffect(() => {
-    fetchPostById(params.postId)
+    const fetchData = async () => {
+      await fetchPostById(params.postId)
+    }
+
     const accessToken = getAccessToken()
     if (!accessToken) {
       router.push("/login")
     }
+    fetchData()
   }, [router, fetchAllPosts])
 
   return (

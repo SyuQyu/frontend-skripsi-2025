@@ -1,5 +1,5 @@
 import clsx from "clsx"
-import { IoCheckmarkCircleOutline, IoCloseCircleOutline } from "react-icons/io5"
+import { Check, X } from "lucide-react"
 import {
   HoverCard,
   HoverCardContent,
@@ -25,15 +25,15 @@ function StrengthBar({ strength }: { strength: number }) {
                   <p>Your password must have:</p>
                   <ul>
                     <li className="flex flex-row justify-start items-center gap-2">
-                      {strength >= 1 ? <IoCheckmarkCircleOutline className="text-green-400 size-4" /> : <IoCloseCircleOutline className="text-red-600 size-4" />}
+                      {strength >= 1 ? <Check className="text-green-400 size-4" /> : <X className="text-red-600 size-4" />}
                       At least 8 characters
                     </li>
                     <li className="flex flex-row justify-start items-center gap-2">
-                      {strength >= 2 ? <IoCheckmarkCircleOutline className="text-green-400 size-4" /> : <IoCloseCircleOutline className="text-red-600 size-4" />}
+                      {strength >= 2 ? <Check className="text-green-400 size-4" /> : <X className="text-red-600 size-4" />}
                       At least one number
                     </li>
                     <li className="flex flex-row justify-start items-center gap-2">
-                      {strength >= 3 ? <IoCheckmarkCircleOutline className="text-green-400 size-4" /> : <IoCloseCircleOutline className="text-red-600 size-4" />}
+                      {strength >= 3 ? <Check className="text-green-400 size-4" /> : <X className="text-red-600 size-4" />}
                       At least one special case character
                     </li>
                   </ul>

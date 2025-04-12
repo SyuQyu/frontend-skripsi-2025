@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import Cookies from "js-cookie"
 import {
+  checkPassword,
   getLoggedInUserData,
   login,
   logout,
@@ -28,13 +29,14 @@ interface AuthState {
   setCodeVerificationPassword: (code: string) => void
   login: (email: string, password: string) => Promise<AuthResponse>
   register: (username: string, email: string, password: string, confirmPassword: string) => Promise<AuthResponse>
-  logout: (refresh: string) => Promise<AuthResponse>
+  logout: (refresh?: string) => Promise<AuthResponse>
   verificationSend: (code_type: string, email: string) => Promise<AuthResponse>
   verificationCheck: (code_type: string, email: string, code: string) => Promise<AuthResponse>
   resetPassword: (email: string, password: string, confirmPassword: string, code: string) => Promise<AuthResponse>
   verifyToken: (token: string) => Promise<void>
   refreshToken: (refresh: string) => Promise<void>
   getLoggedInUser: () => any
+  checkPassword: (userId: string, password: string) => Promise<any>
 }
 
 const useAuthStore = create<AuthState>(set => ({
@@ -50,17 +52,17 @@ const useAuthStore = create<AuthState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await getLoggedInUserData()
-      if (response.data.status === "success") {
-        set({ user: response.data.user, isLoading: false })
-        return response.data.user
+      if (response.status === "success") {
+        set({ user: response.user, isLoading: false })
+        return response.user
       }
       else {
         set({ isLoading: false })
-        throw new Error(response.data.message || "Failed to fetch user")
+        throw new Error(response.message || "Failed to fetch user")
       }
     }
     catch (error: any) {
-      set({ error: error.response?.data?.message || "Failed to fetch user", isLoading: false })
+      set({ error: error.response?.message || "Failed to fetch user", isLoading: false })
     }
   },
 
@@ -68,21 +70,33 @@ const useAuthStore = create<AuthState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await login(username, password)
+      if (response.status === "success") {
+        Cookies.set("access_token", response.accessToken, { expires: 1 })
+        Cookies.set("refresh_token", response.refreshToken, { expires: 7 })
 
-      if (response.data.status === "success") {
-        Cookies.set("access_token", response.data.accessToken, { expires: 1 })
-        Cookies.set("refresh_token", response.data.refreshToken, { expires: 7 })
-
-        set({ user: response.data, isLoading: false })
-        return { data: response.data, error: false }
+        set({ user: response, isLoading: false })
+        return { data: response, error: false }
       }
       else {
-        throw new Error(response.data.message || "Login failed")
+        throw new Error(response.message || "Login failed")
       }
     }
     catch (error: any) {
-      set({ error: error.response?.data?.message || "Login failed", isLoading: false })
+      set({ error: error.response?.message || "Login failed", isLoading: false })
       return { error: true, message: error.response?.data || "Login failed" }
+    }
+  },
+
+  checkPassword: async (userId, password) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await checkPassword(userId, password)
+      set({ isLoading: false })
+      return { data: response, error: false }
+    }
+    catch (error: any) {
+      set({ error: error.response?.data || "Password check failed", isLoading: false })
+      return { error: true, message: error.response?.data || "Password check failed" }
     }
   },
 
@@ -96,8 +110,8 @@ const useAuthStore = create<AuthState>(set => ({
 
     try {
       const response = await register(username, email, password)
-      set({ user: response.data, isLoading: false, email })
-      return { data: response.data, error: false }
+      set({ user: response, isLoading: false, email })
+      return { data: response, error: false }
     }
     catch (error: any) {
       set({ error: error.response?.data || "Registration failed", isLoading: false })
@@ -112,10 +126,10 @@ const useAuthStore = create<AuthState>(set => ({
       if (code_type === "reset_password")
         set({ codeVerificationPassword: code, email })
       set({ isLoading: false })
-      return { data: response.data, error: false }
+      return { data: response, error: false }
     }
     catch (error: any) {
-      set({ error: error.response?.data?.message || "Verification failed", isLoading: false })
+      set({ error: error.response?.message || "Verification failed", isLoading: false })
       return { error: true, message: error.response?.data?.message || "Verification failed" }
     }
   },
@@ -125,7 +139,7 @@ const useAuthStore = create<AuthState>(set => ({
     try {
       const response = await verificationSend(code_type, email)
       set({ isLoading: false, email })
-      return { data: response.data, error: false }
+      return { data: response, error: false }
     }
     catch (error: any) {
       set({ error: error.response?.data || "Verification failed", isLoading: false })
@@ -141,21 +155,21 @@ const useAuthStore = create<AuthState>(set => ({
       return { data: "Logout successful", error: false }
     }
     catch (error: any) {
-      set({ error: error.response?.data?.message || "Logout failed", isLoading: false })
+      set({ error: error.response?.message || "Logout failed", isLoading: false })
       return { error: true, message: error.response?.data || "Logout failed" }
     }
   },
 
-  resetPassword: async (email, password, confirmPassword, code) => {
+  resetPassword: async (userId, password, confirmPassword) => {
     set({ isLoading: true, error: null })
     if (password !== confirmPassword) {
       set({ error: "Passwords do not match", isLoading: false })
       return { error: true, message: "Passwords do not match" }
     }
     try {
-      const response = await resetPassword(email, password, confirmPassword, code)
-      set({ isLoading: false, email })
-      return { data: response.data, error: false }
+      const response = await resetPassword(userId, password)
+      set({ isLoading: false })
+      return { data: response, error: false }
     }
     catch (error: any) {
       set({ error: error.response?.data || "Password reset failed", isLoading: false })
