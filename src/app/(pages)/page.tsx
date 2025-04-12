@@ -26,6 +26,10 @@ export default function Home() {
   const { user } = useAuthStore()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
+  const [bannedWords, setBannedWords] = useState<string[]>([])
+  const [replacementWords, setReplacementWords] = useState<string[]>([])
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+
   useEffect(() => {
     const fetchData = async () => {
       await fetchAllPosts()
@@ -66,6 +70,8 @@ export default function Home() {
         resetForm()
         fetchAllPosts()
         setIsDialogOpen(false)
+        setBannedWords([])
+        setReplacementWords([])
       }
       catch {
         toast({
@@ -80,11 +86,9 @@ export default function Home() {
     },
   })
 
-  const debounceRef = useRef<NodeJS.Timeout | null>(null)
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const rawValue = e.target.value
-    formik.setFieldValue("content", rawValue) // langsung update UI dulu
+    formik.setFieldValue("content", rawValue)
 
     if (debounceRef.current)
       clearTimeout(debounceRef.current)
@@ -92,12 +96,13 @@ export default function Home() {
     debounceRef.current = setTimeout(async () => {
       try {
         const result: any = await checkWord(rawValue)
-        formik.setFieldValue("content", result.filtered)
+        setBannedWords(result.bannedWords || [])
+        setReplacementWords(result.replacementWords || [])
       }
       catch (error) {
         console.error("Filtering failed:", error)
       }
-    }, 500) // debounce selama 500ms
+    }, 500)
   }
 
   return (
@@ -124,13 +129,52 @@ export default function Home() {
                       Share your experience with the community.
                     </DialogDescription>
                   </DialogHeader>
+
+                  {bannedWords.length > 0 && (
+                    <div className="mb-2 flex flex-wrap gap-2">
+                      {bannedWords.map((word, idx) => (
+                        <div key={idx} className="flex items-center gap-2 bg-red-100 border border-red-400 rounded px-2 py-1">
+                          <span className="text-red-700 font-semibold">{word}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="text-blue-600 hover:underline p-0 h-auto"
+                            onClick={() => {
+                              const replaced = formik.values.content.replace(
+                                new RegExp(`\\b${word}\\b`, "gi"),
+                                replacementWords[idx],
+                              )
+                              formik.setFieldValue("content", replaced)
+
+                              checkWord(replaced).then((result: any) => {
+                                setBannedWords(result.bannedWords || [])
+                                setReplacementWords(result.replacementWords || [])
+                              })
+
+                              // Hapus kata yang sudah diganti dari state
+                              const newBanned = bannedWords.filter((_, i) => i !== idx)
+                              const newReplacements = replacementWords.filter((_, i) => i !== idx)
+
+                              setBannedWords(newBanned)
+                              setReplacementWords(newReplacements)
+                            }}
+                          >
+                            Replace with
+                            {" "}
+                            <span className="font-bold ml-1">{replacementWords[idx]}</span>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <form onSubmit={formik.handleSubmit} className="w-full flex flex-col gap-4">
                     <Input
                       className="w-full"
                       isTextarea={true}
                       name="content"
                       value={formik.values.content}
-                      onChange={handleInputChange} // Ganti handler
+                      onChange={handleInputChange}
                       onBlur={formik.handleBlur}
                       error={
                         formik.touched.content && formik.errors.content
@@ -140,6 +184,24 @@ export default function Home() {
                       length={formik.values.content.length.toString()}
                       placeholder="Share your story..."
                     />
+
+                    {bannedWords.length > 0 && (
+                      <div className="border rounded p-3 bg-gray-50 whitespace-pre-wrap text-sm text-black">
+                        {formik.values.content.split(" ").map((word, idx) => {
+                          const clean = word.replace(/[.,!?]/g, "")
+                          const isBanned = bannedWords.includes(clean.toLowerCase())
+                          return (
+                            <span
+                              key={idx}
+                              className={isBanned ? "bg-red-200 text-red-800 font-semibold px-1 rounded" : ""}
+                            >
+                              {`${word} `}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )}
+
                     <DialogFooter>
                       <Button
                         className="bg-blue-500 text-white py-2 px-4 rounded-md"
