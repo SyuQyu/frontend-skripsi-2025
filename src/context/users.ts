@@ -34,7 +34,8 @@ const useUserStore = create<UserState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await getAllUsers()
-      set({ users: response.data, isLoading: false })
+      set({ users: response.users, isLoading: false })
+      return response.users
     }
     catch (error: any) {
       set({
@@ -48,7 +49,7 @@ const useUserStore = create<UserState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await getUserById(id)
-      set({ selectedUser: response.data, isLoading: false })
+      set({ selectedUser: response.users, isLoading: false })
     }
     catch (error: any) {
       set({
@@ -61,9 +62,10 @@ const useUserStore = create<UserState>(set => ({
   addUser: async (user: CreateUserInput) => {
     set({ isLoading: true, error: null })
     try {
-      await createUser(user)
+      const res = await createUser(user)
       await useUserStore.getState().fetchAllUsers()
       set({ isLoading: false })
+      return res
     }
     catch (error: any) {
       set({
@@ -93,9 +95,10 @@ const useUserStore = create<UserState>(set => ({
   removeUser: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
-      await deleteUser(id)
+      const res = await deleteUser(id)
       await useUserStore.getState().fetchAllUsers()
       set({ isLoading: false })
+      return res
     }
     catch (error: any) {
       set({

@@ -4,6 +4,7 @@ import { useFormik } from "formik"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Check, X } from "lucide-react"
+import jwt from "jsonwebtoken"
 import { Button, Card, Input } from "@/components/common"
 import { Checkbox } from "@/components/ui/checkbox"
 import useAuthStore from "@/context/auth"
@@ -28,6 +29,7 @@ function validate(values: FormValues) {
 
 export default function Login() {
   const router = useRouter()
+  const accessToken = getAccessToken()
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const { login } = useAuthStore()
@@ -56,14 +58,19 @@ export default function Login() {
           icon: (<Check className="size-6 text-green-600" />),
           title: "Login Success.",
         })
-        router.push(`/`)
+
+        if (response?.data?.role === "Admin") {
+          router.push("/admin")
+        }
+        else {
+          router.push("/")
+        }
         setSubmitting(false)
       }
     },
   })
 
   useEffect(() => {
-    const accessToken = getAccessToken()
     if (accessToken) {
       router.push(`/`)
     }

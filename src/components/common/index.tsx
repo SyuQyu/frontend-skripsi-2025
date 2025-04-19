@@ -12,8 +12,10 @@ const HamburgerMenu = dynamic(() => import("@/components/common/hamburgerMenu/ha
 const AccordionCustom = dynamic(() => import("@/components/common/accordion/accordionCustom"))
 const PostCard = dynamic(() => import("@/components/common/postCard/postCard"))
 const DropDownMenu = dynamic(() => import("@/components/common/dropDownMenu/dropDownMenu"))
+const ConfirmDialog = dynamic(() => import("@/components/common/confirmDialog/confirmDialog"))
 export {
   Button,
+  ConfirmDialog,
   DropDownMenu,
   ImageWithFallback,
   Card,

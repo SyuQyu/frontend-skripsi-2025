@@ -7,6 +7,8 @@ const config = {
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
+    "./src/app/**/*.{ts,tsx}",
+    "./src/components/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {
@@ -15,22 +17,11 @@ const config = {
       padding: "2rem",
       screens: {
         "xs": "320px",
-        // => @media (min-width: 320px) { ... }
-
         "sm": "640px",
-        // => @media (min-width: 640px) { ... }
-
         "md": "768px",
-        // => @media (min-width: 768px) { ... }
-
         "lg": "1024px",
-        // => @media (min-width: 1024px) { ... }
-
         "xl": "1280px",
-        // => @media (min-width: 1280px) { ... }
-
         "2xl": "1536px",
-        // => @media (min-width: 1536px) { ... }
       },
     },
     extend: {
@@ -40,22 +31,44 @@ const config = {
       colors: {
         "black": "#06192F",
         "custom-blue": "#0469DE",
+        "sidebar": {
+          "DEFAULT": "hsl(var(--sidebar-background))",
+          "foreground": "hsl(var(--sidebar-foreground))",
+          "primary": "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          "accent": "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          "border": "hsl(var(--sidebar-border))",
+          "ring": "hsl(var(--sidebar-ring))",
+        },
       },
       backgroundColor: {
         "custom-blue": "#0469DE",
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          from: {
+            height: "0",
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)",
+          },
         },
         "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          from: {
+            height: "var(--radix-accordion-content-height)",
+          },
+          to: {
+            height: "0",
+          },
         },
         "caret-blink": {
-          "0%,70%,100%": { opacity: "1" },
-          "20%,50%": { opacity: "0" },
+          "0%,70%,100%": {
+            opacity: "1",
+          },
+          "20%,50%": {
+            opacity: "0",
+          },
         },
       },
       animation: {

@@ -1,8 +1,4 @@
 import type { Metadata } from "next"
-import clsx from "clsx"
-import { ROBOTO } from "@/constants/fonts"
-import "@/styles/index.scss"
-import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: "AnonChat",
@@ -15,11 +11,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={clsx("scroll-smooth", ROBOTO.variable)}>
-      <body className="w-full ">
-        {children}
-        <Toaster />
-      </body>
-    </html>
+    // <html lang="en" className={clsx("scroll-smooth", ROBOTO.variable)}>
+    <div className="w-full flex justify-center items-center">
+      {children}
+    </div>
+    // </html>
   )
 }

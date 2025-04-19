@@ -5,10 +5,12 @@ import { LockKeyhole, LockOpen } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 
 interface InputCustomProps {
+  id?: string
   label?: string
   placeholder?: string
   type?: string
   value?: string
+  defaultValue?: string
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
   onBlur?: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void
   className?: string
@@ -23,10 +25,12 @@ interface InputCustomProps {
 }
 
 export default function InputCustom({
+  id,
   label,
   placeholder,
   type = "text",
   value,
+  defaultValue,
   name,
   onChange,
   onBlur,
@@ -49,26 +53,29 @@ export default function InputCustom({
   return (
     <div className={clsx("w-full flex flex-col gap-2", className)} style={style}>
       {label && (
-        <label className="text-base font-bold text-black">{label}</label>
+        <label htmlFor={id} className="text-base font-bold text-black">
+          {label}
+        </label>
       )}
-      <div className={clsx(
-        "flex items-center rounded-md",
-        isFocused ? "border-[#0469DE] border-2" : "border-[#CBD5E1] border",
-        error ? "border-red-500" : "",
-      )}
+      <div
+        className={clsx(
+          "flex items-center rounded-md",
+          isFocused ? "border-[#0469DE] border-2" : "border-[#CBD5E1] border",
+          error ? "border-red-500" : "",
+        )}
       >
         {isTextarea
           ? (
               <Textarea
+                id={id}
                 autoFocus={autoFocus && !disabled}
                 placeholder={placeholder}
                 value={value}
+                defaultValue={defaultValue}
                 name={name}
                 onChange={onChange}
                 onBlur={(e) => {
-                  if (onBlur) {
-                    onBlur(e)
-                  }
+                  onBlur?.(e)
                   setIsFocused(false)
                 }}
                 onFocus={() => setIsFocused(true)}
@@ -78,16 +85,16 @@ export default function InputCustom({
             )
           : (
               <input
+                id={id}
                 autoFocus={autoFocus && !disabled}
                 type={type === "password" && !showPassword ? "password" : "text"}
                 placeholder={placeholder}
                 value={value}
+                defaultValue={defaultValue}
                 name={name}
                 onChange={onChange}
                 onBlur={(e) => {
-                  if (onBlur) {
-                    onBlur(e)
-                  }
+                  onBlur?.(e)
                   setIsFocused(false)
                 }}
                 onFocus={() => setIsFocused(true)}
@@ -101,22 +108,18 @@ export default function InputCustom({
           </span>
         )}
         {icon && type !== "password" && !isTextarea && (
-          <span className="px-2">
-            {icon}
-          </span>
+          <span className="px-2">{icon}</span>
         )}
       </div>
       <div className={clsx("flex flex-row items-center", error ? "justify-between" : "justify-end")}>
         {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
-        {length !== ""
-          ? (
-              <div className="text-right text-sm text-gray-500">
-                {length}
-                {" "}
-                / 500 characters
-              </div>
-            )
-          : null}
+        {length !== "" && (
+          <div className="text-right text-sm text-gray-500">
+            {length}
+            {" "}
+            / 500 characters
+          </div>
+        )}
       </div>
     </div>
   )

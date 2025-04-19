@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import jwt from "jsonwebtoken"
 import { removeTokens, setTokens } from "@/lib/cookies"
 import { refreshToken as refreshTokenEndpoint } from "@/endpoints/auth"
+
+const ADMIN_PATH = "/admin"
 
 export async function authMiddleware(req: NextRequest) {
   const accessToken = req.cookies.get("access_token")?.value
@@ -22,18 +25,20 @@ export async function authMiddleware(req: NextRequest) {
     "/images/Logo.png",
   ]
 
-  // Redirect to home if already logged in and accessing login or other unprotected routes
-  if (accessToken && unprotectedRoutes.includes(req.nextUrl.pathname)) {
+  const currentPath = req.nextUrl.pathname
+
+  // Redirect to home if already logged in and accessing unprotected route
+  if (accessToken && unprotectedRoutes.includes(currentPath)) {
     return NextResponse.redirect(new URL("/", req.url))
   }
 
   // If trying to access a protected route without a token, redirect to login
-  if (!unprotectedRoutes.includes(req.nextUrl.pathname)) {
+  if (!unprotectedRoutes.includes(currentPath)) {
     if (!accessToken) {
       return NextResponse.redirect(new URL("/login", req.url))
     }
     else {
-      const isTokenExpired = false // Token expiration logic goes here
+      const isTokenExpired = false // Add your token expiration logic here
 
       if (isTokenExpired && refreshToken) {
         try {
@@ -55,6 +60,21 @@ export async function authMiddleware(req: NextRequest) {
       else if (!refreshToken) {
         removeTokens()
         return NextResponse.redirect(new URL("/login", req.url))
+      }
+
+      // Check role if accessing /admin
+      if (currentPath.startsWith(ADMIN_PATH)) {
+        try {
+          const decoded: any = jwt.decode(accessToken)
+          const role = decoded?.roleName
+          if (role !== "Admin") {
+            return NextResponse.redirect(new URL("/", req.url)) // or "/unauthorized"
+          }
+        }
+        catch (error) {
+          console.error("Failed to decode token:", error)
+          return NextResponse.redirect(new URL("/login", req.url))
+        }
       }
     }
   }
