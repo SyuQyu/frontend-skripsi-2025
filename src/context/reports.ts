@@ -39,7 +39,7 @@ interface ReportState {
   removeReport: (reportId: string) => Promise<void>
 }
 
-const useReportStore = create<ReportState>(set => ({
+const useReportStore = create<ReportState>((set, get) => ({
   reports: [],
   isLoading: false,
   error: null,
@@ -116,8 +116,10 @@ const useReportStore = create<ReportState>(set => ({
   removeReport: async (reportId) => {
     set({ isLoading: true, error: null })
     try {
-      await deleteReport(reportId)
+      const res = await deleteReport(reportId)
+      await get().fetchAllReports()
       set({ isLoading: false })
+      return res
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to delete report", isLoading: false })

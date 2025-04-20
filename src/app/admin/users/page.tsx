@@ -2,12 +2,18 @@
 import { useEffect } from "react"
 import { DataTable } from "@/components/tablesData/users/data-table"
 import useUserStore from "@/context/users"
+// import useAuthStore from "@/context/auth"
+// import { getRefreshToken } from "@/lib/cookies"
+// import { refreshToken as refreshTokenEndpoint } from "@/endpoints/auth"
 
 export default function Page() {
   const { fetchAllUsers, users } = useUserStore()
+  // const refreshToken: any = getRefreshToken()
   useEffect(() => {
     const fetchData = async () => {
       await fetchAllUsers()
+      // const res = await refreshTokenEndpoint(refreshToken)
+      // console.log(res)
     }
     fetchData()
   }, [])

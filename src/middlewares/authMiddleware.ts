@@ -43,8 +43,8 @@ export async function authMiddleware(req: NextRequest) {
       if (isTokenExpired && refreshToken) {
         try {
           const response = await refreshTokenEndpoint(refreshToken)
-          if (response?.data?.access && response?.data?.refresh) {
-            setTokens(response.data.access, response.data.refresh)
+          if (response?.success === "success") {
+            setTokens(refreshToken, response.accessToken)
           }
           else {
             removeTokens()

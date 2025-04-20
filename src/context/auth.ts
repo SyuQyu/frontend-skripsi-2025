@@ -191,8 +191,9 @@ const useAuthStore = create<AuthState>(set => ({
   refreshToken: async (refresh) => {
     set({ isLoading: true, error: null })
     try {
-      await refreshToken(refresh)
+      const res = await refreshToken(refresh)
       set({ isLoading: false })
+      return res
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Token refresh failed", isLoading: false })

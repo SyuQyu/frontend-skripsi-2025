@@ -52,11 +52,12 @@ import {
   TrendingUpIcon,
   X,
 } from "lucide-react"
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { z } from "zod"
 
 import { useFormik } from "formik"
 import * as Yup from "yup"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { toast } from "@/components/ui/use-toast"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -76,8 +77,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ConfirmDialog, Input } from "@/components/common"
-
-import { toast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -111,108 +110,92 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
-import usePostStore from "@/context/post"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import useUserStore from "@/context/users"
+import useTagStore from "@/context/tags"
+import useReportStore from "@/context/reports"
 
 export const schema = z.object({
   id: z.string(),
+  postId: z.string().nullable(),
+  replyId: z.string().nullable(),
   userId: z.string(),
-  content: z.string(),
-  filteredContent: z.string(),
-  viewCount: z.number(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
   user: z.object({
     id: z.string(),
     username: z.string(),
-  }),
-  likes: z.array(z.any()),
-  tags: z.array(z.any()),
-  reports: z.array(z.any()),
-  replies: z.array(z.any()),
+    email: z.string(),
+    profilePicture: z.string().nullable(),
+  }).nullable(),
+  post: z.object({
+    id: z.string(),
+    content: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    userId: z.string(),
+    user: z.object({
+      id: z.string(),
+      username: z.string(),
+      email: z.string(),
+      profilePicture: z.string().nullable(),
+    }).nullable(),
+    tags: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      createdAt: z.string(),
+      updatedAt: z.string(),
+    })),
+  }).nullable(),
+  violationCategory: z.string(),
+  message: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 })
-
-// Create a separate component for the drag handle
-// function DragHandle({ id }: { id: number }) {
-//   const { attributes, listeners } = useSortable({
-//     id,
-//   })
-
-//   return (
-//     <Button
-//       {...attributes}
-//       {...listeners}
-//       variant="ghost"
-//       size="icon"
-//       className="size-7 text-slate-500 hover:bg-transparent dark:text-slate-400"
-//     >
-//       <GripVerticalIcon className="size-3 text-slate-500 dark:text-slate-400" />
-//       <span className="sr-only">Drag to reorder</span>
-//     </Button>
-//   )
-// }
 
 function columns(
   setRowData: (data: z.infer<typeof schema>) => void,
+  setIsDialogOpenEdit: (open: boolean) => void,
   setIsDialogOpenDelete: (open: boolean) => void,
 ): ColumnDef<z.infer<typeof schema>>[] {
   return [
     {
-      accessorKey: "username",
-      header: "Username",
-      cell: ({ row }) => (
-        <div className="font-medium text-slate-800 dark:text-slate-200">
-          {row.original.user.username}
-        </div>
-      ),
+      accessorKey: "no",
+      header: "No",
+      cell: ({ row }) => <span className="text-center">{row.index + 1}</span>,
     },
     {
-      accessorKey: "filteredContent",
-      header: "Filtered Content",
-      cell: ({ row }) => (
-        <div className="max-w-xs truncate">{row.original.filteredContent}</div>
-      ),
+      accessorKey: "userId",
+      header: "Reported By",
+      cell: ({ row }) => <span>{row.original.user?.username}</span>,
     },
     {
-      accessorKey: "viewCount",
-      header: "Views",
-      cell: ({ row }) => (
-        <div className="text-left">{row.original.viewCount}</div>
-      ),
+      accessorKey: "postId",
+      header: "Post ID",
+      cell: ({ row }) => <span>{row.original.postId}</span>,
     },
     {
-      id: "likes",
-      header: "Likes",
-      cell: ({ row }) => (
-        <Badge variant="outline" className="text-blue-600 dark:text-blue-400">
-          {row.original.likes.length}
-        </Badge>
-      ),
+      accessorKey: "replyId",
+      header: "Reply ID",
+      cell: ({ row }) => <span>{row.original.replyId}</span>,
     },
     {
-      id: "reports",
-      header: "Reports",
-      cell: ({ row }) => (
-        <Badge variant="outline" className="text-red-600 dark:text-red-400">
-          {row.original.reports.length}
-        </Badge>
-      ),
+      accessorKey: "violationCategory",
+      header: "Violation Category",
+      cell: ({ row }) => <span>{row.original.violationCategory}</span>,
     },
     {
-      id: "replies",
-      header: "Replies",
-      cell: ({ row }) => (
-        <Badge variant="outline" className="text-green-600 dark:text-green-400">
-          {row.original.replies.length}
-        </Badge>
-      ),
+      accessorKey: "message",
+      header: "Message",
+      cell: ({ row }) => <span>{row.original.message}</span>,
     },
     {
       accessorKey: "createdAt",
       header: "Created At",
-      cell: ({ row }) => (
-        <span>{new Date(row.original.createdAt).toLocaleString()}</span>
-      ),
+      cell: ({ row }) => <span>{new Date(row.original.createdAt).toLocaleString()}</span>,
+    },
+    {
+      accessorKey: "updatedAt",
+      header: "Updated At",
+      cell: ({ row }) => <span>{new Date(row.original.updatedAt).toLocaleString()}</span>,
     },
     {
       id: "actions",
@@ -267,8 +250,11 @@ export function DataTable({
   data: z.infer<typeof schema>[]
 }) {
   const [data, setData] = React.useState(initialData)
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  const [isDialogOpenEdit, setIsDialogOpenEdit] = React.useState(false)
   const [isDialogOpenDelete, setIsDialogOpenDelete] = React.useState(false)
   const [rowData, setRowData] = React.useState<any>(null)
+  const [searchQuery, setSearchQuery] = React.useState("") // State untuk input pencarian
 
   React.useEffect(() => {
     setData(initialData)
@@ -291,6 +277,12 @@ export function DataTable({
     useSensor(KeyboardSensor, {}),
   )
 
+  function handleSearch(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const value = event.target.value
+    setSearchQuery(value)
+    setColumnFilters([{ id: "message", value }]) // Filter berdasarkan kolom "message"
+  }
+
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
     [data],
@@ -298,7 +290,7 @@ export function DataTable({
 
   const table = useReactTable({
     data,
-    columns: columns(setRowData, setIsDialogOpenDelete),
+    columns: columns(setRowData, setIsDialogOpenEdit, setIsDialogOpenDelete),
     state: {
       sorting,
       columnVisibility,
@@ -342,6 +334,8 @@ export function DataTable({
           className="!w-1/2 justify-center !block"
           name="content"
           placeholder="Find data..."
+          value={searchQuery} // Bind input value
+          onChange={handleSearch} // Tambahkan handler pencarian
         />
         <div className="flex items-center gap-2">
           <DropdownMenu>
@@ -356,11 +350,11 @@ export function DataTable({
             <DropdownMenuContent align="end" className="w-56">
               {table
                 .getAllColumns()
-                // .filter(
-                //   column =>
-                //     typeof column.accessorFn !== "undefined"
-                //     && column.getCanHide(),
-                // )
+                .filter(
+                  column =>
+                    typeof column.accessorFn !== "undefined"
+                    && column.getCanHide(),
+                )
                 .map((column) => {
                   return (
                     <DropdownMenuCheckboxItem
@@ -431,7 +425,7 @@ export function DataTable({
                       <TableRow>
                         <TableCell
                           colSpan={columns.length}
-                          className="h-24 text-center w-full"
+                          className="h-24 text-center"
                         >
                           No results.
                         </TableCell>
@@ -548,17 +542,17 @@ export function DataTable({
   )
 }
 
-function PopUpDialog({ data, isDialogOpen, setIsDialogOpen }: any) {
-  const { removePost } = usePostStore()
+function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
+  const { removeReport } = useReportStore()
 
   const handleDelete = async () => {
     try {
-      const response: any = await removePost(data?.id)
+      const response: any = await removeReport(data?.id)
       if (response?.status === "success") {
         toast({
           icon: <Check className="size-6 text-green-600" />,
           title: "Delete Success.",
-          description: "Post has been deleted.",
+          description: "Report has been deleted.",
         })
         setIsDialogOpen(false)
       }
@@ -580,28 +574,32 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen }: any) {
   }
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Confirm Delete</DialogTitle>
-          <p>
-            Are you sure you want to delete this post:
-            <br />
-            <b>
-              {data?.filteredContent?.slice(0, 50)}
-              ...
-            </b>
-          </p>
-        </DialogHeader>
-        <DialogFooter className="mt-4">
-          <Button variant="destructive" onClick={handleDelete}>
-            Yes, Delete
-          </Button>
-          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-            Cancel
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          {forWhat === "delete" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Confirm Delete</DialogTitle>
+                <p>
+                  Are you sure you want to delete the report with message
+                  {" "}
+                  <b>{data?.message}</b>
+                  ?
+                </p>
+              </DialogHeader>
+              <DialogFooter className="mt-4">
+                <Button variant="destructive" onClick={handleDelete}>
+                  Yes, Delete
+                </Button>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

@@ -57,13 +57,13 @@ const data = {
       icon: FileIcon,
     },
     {
-      title: "Projects",
-      url: "#",
+      title: "Tags",
+      url: "/tags",
       icon: FolderIcon,
     },
     {
-      title: "Team",
-      url: "#",
+      title: "Reports",
+      url: "/reports",
       icon: UsersIcon,
     },
   ],

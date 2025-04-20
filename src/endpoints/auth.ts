@@ -43,16 +43,16 @@ export function verificationCheck(code_type: string, email: string, code: string
 // }
 
 export function verifyToken(token: string) {
-  return fetchInstance("/verify-token", {
+  return fetchInstance("/auth/verify-token", {
     method: "POST",
     body: JSON.stringify({ token }),
   })
 }
 
 export function refreshToken(refresh: string) {
-  return fetchInstance("/refresh-token", {
+  return fetchInstance("/auth/refresh-token", {
     method: "POST",
-    body: JSON.stringify({ refresh }),
+    body: JSON.stringify({ token: refresh }),
   })
 }
 

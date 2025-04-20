@@ -32,7 +32,7 @@ interface PostState {
   checkWord: (text: string) => Promise<void>
 }
 
-const usePostStore = create<PostState>(set => ({
+const usePostStore = create<PostState>((set, get) => ({
   posts: [],
   selectedPost: null,
   isLoading: false,
@@ -130,8 +130,10 @@ const usePostStore = create<PostState>(set => ({
   removePost: async (postId) => {
     set({ isLoading: true, error: null })
     try {
-      await deletePost(postId)
+      const res = await deletePost(postId)
+      get().fetchAllPosts()
       set({ isLoading: false })
+      return res
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to delete post", isLoading: false })
