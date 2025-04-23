@@ -44,11 +44,14 @@ import {
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
+  ChevronsUpDown,
   ColumnsIcon,
   GripVerticalIcon,
   LoaderIcon,
   MoreVerticalIcon,
+  Pencil,
   PlusIcon,
+  Trash2,
   TrendingUpIcon,
   X,
 } from "lucide-react"
@@ -107,80 +110,47 @@ import {
 import {
   Tabs,
   TabsContent,
-  TabsList,
-  TabsTrigger,
 } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import useUserStore from "@/context/users"
-import { toLocalDateTime } from "@/lib/utils"
+import useTagStore from "@/context/tags"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn, toLocalDateTime } from "@/lib/utils"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import useGoodWordStore from "@/context/goodWords"
+import useBadWordStore from "@/context/badWords"
 
 export const schema = z.object({
   id: z.string(),
-  roleId: z.string(),
-  fullName: z.string().nullable(),
-  username: z.string(),
-  email: z.string(),
-  password: z.string(),
-  phone: z.string().nullable(),
-  nim: z.string().nullable(),
-  faculty: z.string().nullable(),
-  gender: z.string().nullable(),
-  firstLogin: z.boolean(),
-  profilePicture: z.string().nullable(),
-  refreshToken: z.string().nullable(),
+  word: z.string(),
+  badWordId: z.string(),
+  badWord: z.object({
+    id: z.string(),
+    word: z.string(),
+  }),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
 
-function columns(setRowData: (data: z.infer<typeof schema>) => void, setIsDialogOpenEdit: (open: boolean) => void, setIsDialogOpenDelete: (open: boolean) => void): ColumnDef<z.infer<typeof schema>>[] {
+function columns(
+  setRowData: (data: z.infer<typeof schema>) => void,
+  setIsDialogOpenEdit: (open: boolean) => void,
+  setIsDialogOpenDelete: (open: boolean) => void,
+): ColumnDef<z.infer<typeof schema>>[] {
   return [
     {
       accessorKey: "no",
       header: "No",
-      cell: ({ row }) => (
-        <span className="text-center">
-          {row.index + 1}
-        </span>
-      ),
+      cell: ({ row }) => <span className="text-center">{row.index + 1}</span>,
     },
     {
-      accessorKey: "username",
-      header: "Username",
-      cell: ({ row }) => <span>{row.original.username}</span>,
+      accessorKey: "word",
+      header: "Word",
+      cell: ({ row }) => <span>{row.original.word}</span>,
     },
     {
-      accessorKey: "email",
-      header: "Email",
-      cell: ({ row }) => <span>{row.original.email}</span>,
-    },
-    {
-      accessorKey: "fullName",
-      header: "Full Name",
-      cell: ({ row }) => <span>{row.original.fullName ?? "-"}</span>,
-    },
-    {
-      accessorKey: "nim",
-      header: "NIM",
-      cell: ({ row }) => <span>{row.original.nim ?? "-"}</span>,
-    },
-    {
-      accessorKey: "faculty",
-      header: "Faculty",
-      cell: ({ row }) => <span>{row.original.faculty ?? "-"}</span>,
-    },
-    {
-      accessorKey: "gender",
-      header: "Gender",
-      cell: ({ row }) => <span>{row.original.gender ?? "-"}</span>,
-    },
-    {
-      accessorKey: "firstLogin",
-      header: "First Login",
-      cell: ({ row }) => (
-        <span className={row.original.firstLogin ? "text-green-600" : "text-red-500"}>
-          {row.original.firstLogin ? "Yes" : "No"}
-        </span>
-      ),
+      accessorKey: "badWord.word",
+      header: "Bad Word",
+      cell: ({ row }) => <span>{row.original.badWord.word}</span>,
     },
     {
       accessorKey: "createdAt",
@@ -250,16 +220,21 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
 
 export function DataTable({
   data: initialData,
+  badWords,
 }: {
   data: z.infer<typeof schema>[]
+  badWords: any
 }) {
   const [data, setData] = React.useState(initialData)
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  const [dataBadWords, setDataBadWords] = React.useState(badWords)
   const [isDialogOpenCreate, setIsDialogOpenCreate] = React.useState(false)
   const [isDialogOpenEdit, setIsDialogOpenEdit] = React.useState(false)
   const [isDialogOpenDelete, setIsDialogOpenDelete] = React.useState(false)
   const [rowData, setRowData] = React.useState<any>(null)
   React.useEffect(() => {
     setData(initialData)
+    setDataBadWords(badWords)
   }, [initialData])
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility]
@@ -278,11 +253,11 @@ export function DataTable({
     useSensor(TouchSensor, {}),
     useSensor(KeyboardSensor, {}),
   )
-
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
     [data],
   )
+
   const cols = columns(setRowData, setIsDialogOpenEdit, setIsDialogOpenDelete)
 
   const table = useReactTable({
@@ -371,23 +346,26 @@ export function DataTable({
           </DropdownMenu>
           <Button variant="outline" size="sm" onClick={() => setIsDialogOpenCreate(true)}>
             <PlusIcon />
-            <span className="hidden lg:inline">Add Users</span>
+            <span className="hidden lg:inline">Add Good Words</span>
           </Button>
           <PopUpDialog
             isDialogOpen={isDialogOpenCreate}
             setIsDialogOpen={setIsDialogOpenCreate}
+            badWords={badWords}
             forWhat="create"
           />
           <PopUpDialog
             data={rowData}
             isDialogOpen={isDialogOpenEdit}
             setIsDialogOpen={setIsDialogOpenEdit}
+            badWords={badWords}
             forWhat="edit"
           />
           <PopUpDialog
             data={rowData}
             isDialogOpen={isDialogOpenDelete}
             setIsDialogOpen={setIsDialogOpenDelete}
+            badWords={badWords}
             forWhat="delete"
           />
         </div>
@@ -556,73 +534,53 @@ export function DataTable({
   )
 }
 
-function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
-  const { editUser, addUser, removeUser } = useUserStore()
+function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }: any) {
+  const { addGoodWord, editGoodWord, removeGoodWord } = useGoodWordStore()
+  const { addBadWord, editBadWord, removeBadWord } = useBadWordStore()
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false)
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  const [value, setValue] = React.useState(data?.badWordId || "")
+  const [newBadWord, setNewBadWord] = React.useState("")
+  const [isNewBadWordInputVisible, setIsNewBadWordInputVisible] = React.useState(false)
+  const [editingBadWordId, setEditingBadWordId] = React.useState<string | null>(null)
+  const [editingBadWordText, setEditingBadWordText] = React.useState("")
+
+  const badWordsLookup = badWords.map((badWord: any) => ({
+    label: badWord.word,
+    value: badWord.id,
+  }))
+
+  const getBadWordLabel = (id: string) => {
+    const found = badWordsLookup.find((bw: { value: string }) => bw.value === id)
+    return found ? found.label : ""
+  }
 
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      fullName: data?.fullName || "",
-      nim: data?.nim || "",
-      faculty: data?.faculty || "",
-      phone: data?.phone || "",
-      email: data?.email || "",
-      newPassword: "",
-      newPasswordConfirmation: "",
-      username: data?.username || "",
+      word: data?.word || "",
+      badWordId: data?.badWordId || "",
     },
     validationSchema: Yup.object({
-      fullName: Yup.string().nullable(),
-      nim: Yup.string().nullable(),
-      faculty: Yup.string().nullable(),
-      phone: Yup.string().nullable(),
-      email: Yup.string().email("Invalid email format").nullable(),
-      newPassword: Yup.string().nullable(),
-      newPasswordConfirmation: Yup.string()
-        .oneOf([Yup.ref("newPassword"), undefined], "Passwords must match")
-        .nullable(),
-      username: Yup.string().nullable(),
+      word: Yup.string().required("Word is required"),
+      badWordId: Yup.string().required("Bad Word ID is required"),
     }),
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        const updatedFields = Object.entries(values).reduce((acc: any, [key, value]) => {
-          if (key === "newPassword" && value) {
-            acc.password = value
-          }
-          else if (
-            key !== "newPassword"
-            && key !== "newPasswordConfirmation"
-            && value !== formik.initialValues[key as keyof typeof formik.initialValues]
-          ) {
-            acc[key] = value
-          }
-          return acc
-        }, {})
-
-        if (Object.keys(updatedFields).length === 0) {
-          toast({
-            icon: <X className="size-6" />,
-            title: "No changes.",
-            description: "You haven't updated any fields.",
-          })
-          setSubmitting(false)
-          return
-        }
-
         let response: any
         if (forWhat === "create") {
-          response = await addUser(updatedFields)
+          response = await addGoodWord(values)
         }
         else {
-          response = await editUser(data?.id, updatedFields)
+          response = await editGoodWord(data?.id, values)
         }
 
         if (response?.status === "success") {
           toast({
             icon: <Check className="size-6 text-green-600" />,
             title: `${forWhat === "create" ? "Create" : "Update"} Success.`,
-            description: `User successfully ${forWhat === "create" ? "created" : "updated"}.`,
+            description: `Good word successfully ${forWhat === "create" ? "created" : "updated"}.`,
           })
           setIsDialogOpen(false)
         }
@@ -649,12 +607,12 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
 
   const handleDelete = async () => {
     try {
-      const response: any = await removeUser(data?.id)
+      const response: any = await removeGoodWord(data?.id)
       if (response?.status === "success") {
         toast({
           icon: <Check className="size-6 text-green-600" />,
           title: "Delete Success.",
-          description: "User has been deleted.",
+          description: "Good word has been deleted.",
         })
         setIsDialogOpen(false)
       }
@@ -675,6 +633,79 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
     }
   }
 
+  const handleAddBadWord = async () => {
+    if (newBadWord.trim() === "")
+      return
+
+    try {
+      const response: any = await addBadWord({ word: newBadWord })
+      if (response?.status === "success") {
+        toast({
+          icon: <Check className="size-6 text-green-600" />,
+          title: "Bad Word Added.",
+          description: "The new bad word has been added.",
+        })
+        badWords.push({ word: newBadWord, id: response.badWord.id })
+        setNewBadWord("")
+        setIsNewBadWordInputVisible(false)
+        setValue(response.badWord.id)
+        formik.setFieldValue("badWordId", response.badWord.id)
+      }
+      else {
+        toast({
+          icon: <X className="size-6" />,
+          title: "Add Failed.",
+          description: response?.message?.detail || "Unknown error.",
+        })
+      }
+    }
+    catch (error) {
+      toast({
+        icon: <X className="size-6" />,
+        title: "Add Failed.",
+        description: error instanceof Error ? error.message : "Unexpected error occurred.",
+      })
+    }
+  }
+
+  const handleEditBadWord = async (id: string) => {
+    const response: any = await editBadWord(id, { word: editingBadWordText })
+    if (response?.status === "success") {
+      toast({
+        icon: <Check className="size-5 text-green-600" />,
+        title: "Update Success",
+        description: "Bad word updated successfully.",
+      })
+      setEditingBadWordId(null)
+      setEditingBadWordText("")
+    }
+    else {
+      toast({
+        icon: <X className="size-6" />,
+        title: "Edit Failed.",
+        description: response?.message?.detail || "Unknown error.",
+      })
+    }
+  }
+
+  const handleDeleteBadWord = async (id: string) => {
+    const response: any = await removeBadWord(id)
+    if (response?.status === "success") {
+      toast({
+        icon: <Check className="size-5 text-green-600" />,
+        title: "Deleted",
+        description: "Bad word has been deleted.",
+      })
+    }
+    else {
+      toast({
+        icon: <X className="size-6" />,
+        title: "Delete Failed.",
+        description: response?.message?.detail || "Unknown error.",
+      })
+    }
+  }
+
   return (
     <>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -685,9 +716,9 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
                   <DialogHeader>
                     <DialogTitle>Confirm Delete</DialogTitle>
                     <p>
-                      Are you sure you want to delete user
+                      Are you sure you want to delete the good word
                       {" "}
-                      <b>{data?.fullName}</b>
+                      <b>{data?.word}</b>
                       ?
                     </p>
                   </DialogHeader>
@@ -704,93 +735,159 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
             : (
                 <>
                   <DialogHeader>
-                    <DialogTitle>{forWhat === "create" ? "New User" : "Edit User"}</DialogTitle>
+                    <DialogTitle>
+                      {forWhat === "create" ? "New Good Word" : "Edit Good Word"}
+                    </DialogTitle>
                   </DialogHeader>
                   <form onSubmit={formik.handleSubmit} className="w-full">
-                    <div className="w-full grid grid-cols-2 gap-4">
+                    <div className="w-full grid grid-cols-1 gap-4">
                       <Input
-                        name="fullName"
-                        label="Full Name"
-                        value={formik.values.fullName}
+                        name="word"
+                        label="Word"
+                        value={formik.values.word}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        error={formik.touched.fullName && typeof formik.errors.fullName === "string" ? formik.errors.fullName : null}
-                        placeholder="Full Name"
+                        error={formik.touched.word && typeof formik.errors.word === "string" ? formik.errors.word : null}
+                        placeholder="Word"
                       />
                       <Input
-                        name="email"
-                        label="Email"
-                        value={formik.values.email}
-                        onChange={formik.handleChange}
+                        name="badWordId"
+                        label="Bad Word"
+                        value={getBadWordLabel(formik.values.badWordId)}
+                        onClick={() => setOpen(true)}
                         onBlur={formik.handleBlur}
-                        error={formik.touched.email && typeof formik.errors.email === "string" ? formik.errors.email : null}
-                        placeholder="Email"
+                        error={
+                          formik.touched.badWordId && typeof formik.errors.badWordId === "string"
+                            ? formik.errors.badWordId
+                            : null
+                        }
+                        placeholder="Bad Word"
+                        readOnly
                       />
-                      <Input
-                        name="newPassword"
-                        type="password"
-                        label="New Password"
-                        value={formik.values.newPassword}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.newPassword && typeof formik.errors.newPassword === "string" ? formik.errors.newPassword : null}
-                        placeholder="New Password"
-                      />
-                      <Input
-                        name="newPasswordConfirmation"
-                        type="password"
-                        label="Confirm New Password"
-                        value={formik.values.newPasswordConfirmation}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.newPasswordConfirmation && typeof formik.errors.newPasswordConfirmation === "string" ? formik.errors.newPasswordConfirmation : null}
-                        placeholder="Confirm New Password"
-                      />
-                      <Input
-                        name="username"
-                        label="Username"
-                        value={formik.values.username}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.username && typeof formik.errors.username === "string" ? formik.errors.username : null}
-                        placeholder="Username"
-                      />
-                      <Input
-                        name="nim"
-                        label="NIM (optional)"
-                        value={formik.values.nim}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.nim && typeof formik.errors.nim === "string" ? formik.errors.nim : null}
-                        placeholder="NIM"
-                      />
-                      <Input
-                        name="faculty"
-                        label="Faculty (optional)"
-                        value={formik.values.faculty}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.faculty && typeof formik.errors.faculty === "string" ? formik.errors.faculty : null}
-                        placeholder="Faculty"
-                      />
-                      <Input
-                        name="phone"
-                        label="Phone Number (optional)"
-                        value={formik.values.phone}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.phone && typeof formik.errors.phone === "string" ? formik.errors.phone : null}
-                        placeholder="Phone Number"
-                      />
+
+                      {open && !isNewBadWordInputVisible && (
+                        <Command>
+                          <CommandInput placeholder="Search bad word..." className="h-9" />
+                          <CommandList>
+                            <CommandEmpty>No bad word found.</CommandEmpty>
+                            <CommandGroup>
+                              {badWordsLookup.map((item: any) => (
+                                <CommandItem
+                                  key={item.value}
+                                  value={item.value}
+                                  onSelect={() => {
+                                    if (editingBadWordId === item.value)
+                                      return
+                                    setValue(item.value)
+                                    formik.setFieldValue("badWordId", item.value)
+                                    setOpen(false)
+                                  }}
+                                  className="flex flex-col"
+                                >
+                                  {editingBadWordId === item.value
+                                    ? (
+                                        <>
+                                          <Input
+                                            value={editingBadWordText}
+                                            onChange={e => setEditingBadWordText(e.target.value)}
+                                            placeholder="Edit bad word"
+                                            className="h-8"
+                                          />
+                                          <div className="flex gap-2 mt-1">
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => handleEditBadWord(item.value)}
+                                            >
+                                              Save
+                                            </Button>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => {
+                                                setEditingBadWordId(null)
+                                                setEditingBadWordText("")
+                                              }}
+                                            >
+                                              Cancel
+                                            </Button>
+                                          </div>
+                                        </>
+                                      )
+                                    : (
+                                        <div className="flex items-center justify-between w-full">
+                                          <span>{item.label}</span>
+                                          <div className="flex gap-1">
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                setEditingBadWordId(item.value)
+                                                setEditingBadWordText(item.label)
+                                              }}
+                                            >
+                                              <Pencil />
+                                            </Button>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                handleDeleteBadWord(item.value)
+                                              }}
+                                            >
+                                              <Trash2 />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      )}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      )}
+
+                      {isNewBadWordInputVisible && (
+                        <div className="mt-4">
+                          <Input
+                            name="newBadWord"
+                            label="New Bad Word"
+                            value={newBadWord}
+                            onChange={e => setNewBadWord(e.target.value)}
+                            placeholder="Enter new bad word"
+                          />
+                          <div className="flex gap-2 mt-2">
+                            <Button variant="outline" onClick={handleAddBadWord} className="bg-blue-500 text-white">
+                              Add Bad Word
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => setIsNewBadWordInputVisible(false)}
+                              className="bg-red-500 text-white"
+                            >
+                              Cancel Add Bad Word
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      {!isNewBadWordInputVisible && (
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setIsNewBadWordInputVisible(true)
+                            formik.setFieldValue("badWordId", "")
+                          }}
+                          className="bg-blue-500 text-white"
+                        >
+                          Add New Entries Bad Word
+                        </Button>
+                      )}
                     </div>
 
                     <DialogFooter className="mt-4">
-                      <Button
-                        type="button"
-                        className="bg-blue-500 text-white py-2 px-4 rounded-md"
-                        onClick={() => setIsConfirmDialogOpen(true)}
-                        disabled={formik.isSubmitting}
-                      >
+                      <Button type="submit" className="bg-blue-500 text-white" disabled={formik.isSubmitting}>
                         {formik.isSubmitting ? "Saving..." : "Save Changes"}
                       </Button>
                     </DialogFooter>

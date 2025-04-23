@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import {
+  IncrementPostView,
   checkWord,
   createPost,
   deletePost,
@@ -30,6 +31,7 @@ interface PostState {
   searchPostByContent: (content: string) => Promise<void>
   fetchPostByUser: (userId: string) => Promise<void>
   checkWord: (text: string) => Promise<void>
+  IncrementPostView: (postId: string, userId: string) => Promise<void>
 }
 
 const usePostStore = create<PostState>((set, get) => ({
@@ -54,6 +56,18 @@ const usePostStore = create<PostState>((set, get) => ({
     try {
       const response = await getPostByTags(tagName)
       set({ posts: response.posts, isLoading: false })
+    }
+    catch (error: any) {
+      set({ error: error.response?.data?.message || "Failed to fetch posts", isLoading: false })
+    }
+  },
+
+  IncrementPostView: async (postId, userId) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await IncrementPostView(postId, userId)
+      set({ isLoading: false })
+      return response
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to fetch posts", isLoading: false })

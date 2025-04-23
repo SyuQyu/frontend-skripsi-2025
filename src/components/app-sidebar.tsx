@@ -66,6 +66,11 @@ const data = {
       url: "/reports",
       icon: UsersIcon,
     },
+    {
+      title: "Good & Bad Words",
+      url: "/good-bad-words",
+      icon: UsersIcon,
+    },
   ],
   navClouds: [
     {
@@ -132,7 +137,7 @@ const data = {
       icon: SearchIcon,
     },
   ],
-  documents: [
+  words: [
     {
       name: "Data Library",
       url: "#",
@@ -179,7 +184,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
+        {/* <NavDocuments items={data.words} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

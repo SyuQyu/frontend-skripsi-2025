@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { SectionCards } from "@/components/section-cards"
@@ -21,7 +22,9 @@ export default function RootLayout({
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
-        {children}
+        <Suspense fallback={<div className="flex h-full w-full items-center justify-center">Loading...</div>}>
+          {children}
+        </Suspense>
       </SidebarInset>
     </SidebarProvider>
     // </html>

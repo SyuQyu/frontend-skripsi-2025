@@ -13,6 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { DropdownMenuSeparator } from "./ui/dropdown-menu"
 
 interface NavItem {
   title: string
@@ -38,27 +39,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
-        {/* Quick Create Button */}
-        <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-2">
-            <SidebarMenuButton
-              tooltip="Quick Create"
-              className="min-w-8 bg-slate-900 text-slate-50 duration-200 ease-linear hover:bg-slate-900/90 hover:text-slate-50 active:bg-slate-900/90 active:text-slate-50 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-50/90 dark:hover:text-slate-900 dark:active:bg-slate-50/90 dark:active:text-slate-900"
-            >
-              <PlusCircleIcon />
-              <span>Quick Create</span>
-            </SidebarMenuButton>
-            <Button
-              size="icon"
-              className="h-9 w-9 shrink-0 group-data-[collapsible=icon]:opacity-0"
-              variant="outline"
-            >
-              <MailIcon />
-              <span className="sr-only">Inbox</span>
-            </Button>
-          </SidebarMenuItem>
-        </SidebarMenu>
-
+        <DropdownMenuSeparator />
         {/* Sidebar Menu Items */}
         <SidebarMenu>
           {items.map((item) => {
@@ -71,7 +52,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                     className={clsx(
                       "w-full flex items-center gap-2",
                       active
-                        ? "bg-slate-900 text-slate-50 dark:bg-slate-50 dark:text-slate-900"
+                        ? "bg-blue-600 text-slate-50 dark:bg-blue-50 dark:text-slate-900"
                         : "hover:bg-slate-100 dark:hover:bg-slate-800",
                     )}
                   >

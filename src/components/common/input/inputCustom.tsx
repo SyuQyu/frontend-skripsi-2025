@@ -13,6 +13,7 @@ interface InputCustomProps {
   defaultValue?: string
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
   onBlur?: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+  onClick?: (e: React.MouseEvent<HTMLDivElement | HTMLInputElement | HTMLTextAreaElement>) => void
   className?: string
   style?: React.CSSProperties
   icon?: React.ReactNode
@@ -22,6 +23,7 @@ interface InputCustomProps {
   isTextarea?: boolean
   length?: string
   autoFocus?: boolean
+  readOnly?: boolean
 }
 
 export default function InputCustom({
@@ -34,6 +36,7 @@ export default function InputCustom({
   name,
   onChange,
   onBlur,
+  onClick,
   className,
   style,
   icon,
@@ -42,6 +45,7 @@ export default function InputCustom({
   isTextarea = false,
   length = "",
   autoFocus = false,
+  readOnly = false,
 }: InputCustomProps) {
   const [isFocused, setIsFocused] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -51,7 +55,7 @@ export default function InputCustom({
   }
 
   return (
-    <div className={clsx("w-full flex flex-col gap-2", className)} style={style}>
+    <div className={clsx("w-full flex flex-col gap-2", className)} onClick={onClick} style={style}>
       {label && (
         <label htmlFor={id} className="text-base font-bold text-black">
           {label}
@@ -74,6 +78,7 @@ export default function InputCustom({
                 defaultValue={defaultValue}
                 name={name}
                 onChange={onChange}
+                onClick={onClick}
                 onBlur={(e) => {
                   onBlur?.(e)
                   setIsFocused(false)
@@ -81,6 +86,7 @@ export default function InputCustom({
                 onFocus={() => setIsFocused(true)}
                 className="w-full py-2 px-3 border-none outline-none rounded-md bg-none resize-none"
                 disabled={disabled}
+                readOnly={readOnly}
               />
             )
           : (
@@ -91,6 +97,7 @@ export default function InputCustom({
                 placeholder={placeholder}
                 value={value}
                 defaultValue={defaultValue}
+                onClick={onClick}
                 name={name}
                 onChange={onChange}
                 onBlur={(e) => {
@@ -100,6 +107,7 @@ export default function InputCustom({
                 onFocus={() => setIsFocused(true)}
                 className="w-full py-2 px-3 border-none outline-none rounded-md bg-none"
                 disabled={disabled}
+                readOnly={readOnly}
               />
             )}
         {type === "password" && !disabled && !isTextarea && (

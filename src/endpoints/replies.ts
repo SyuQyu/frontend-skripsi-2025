@@ -16,3 +16,10 @@ export function deleteReplies(replyId: string) {
     method: "DELETE",
   })
 }
+
+export function IncrementReplyView(replyId: string, userId: string) {
+  return fetchInstance(`/replies/increment/view`, {
+    method: "POST",
+    body: JSON.stringify({ replyId, userId }),
+  })
+}

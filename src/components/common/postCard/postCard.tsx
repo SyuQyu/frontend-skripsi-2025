@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useFormik } from "formik"
 import { Check, CircleAlert, Ellipsis, Heart, Reply, Trash, X } from "lucide-react"
@@ -16,8 +16,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 function PostCard({ post, detail, profile }: any) {
-  const { addReply, removeReply } = useReplyStore()
-  const { fetchPostById, removePost, fetchAllPosts, fetchPostByUser } = usePostStore()
+  const { addReply, removeReply, IncrementReplyView } = useReplyStore()
+
+  const { fetchPostById, removePost, fetchAllPosts, fetchPostByUser, IncrementPostView } = usePostStore()
   const { addLike, fetchLikesByParent } = useLikeStore()
   const { addReport } = useReportStore()
   const { user } = useAuthStore()
@@ -216,6 +217,56 @@ function PostCard({ post, detail, profile }: any) {
     }
   }
 
+  const ref = useRef<HTMLDivElement>(null)
+  const hasBeenSeenRef = useRef(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        const entry = entries[0]
+        if (entry.isIntersecting && !hasBeenSeenRef.current) {
+          hasBeenSeenRef.current = true
+          if (post?.id && !activeReplyId) {
+            await IncrementPostView(post?.id, user?.id) // Increment view count for post
+          }
+          observer.disconnect() // Disconnect observer after triggering onView
+        }
+      },
+      { threshold: 0.5 },
+    )
+
+    if (ref.current) {
+      observer.observe(ref.current)
+    }
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
+
+  const replyRefs = useRef<Record<string, HTMLElement | null>>({})
+  const seenRepliesRef = useRef<Set<string>>(new Set())
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(async (entries) => {
+      for (const entry of entries) {
+        const id = entry.target.id
+        if (entry.isIntersecting && !seenRepliesRef.current.has(id)) {
+          seenRepliesRef.current.add(id)
+          await IncrementReplyView(id, user?.id)
+        }
+      }
+    }, { threshold: 0.5 })
+
+    // Observe semua replyRefs
+    Object.values(replyRefs.current).forEach((el) => {
+      if (el)
+        observer.observe(el)
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
   const formatContent = (text: string) => {
     return text?.split("\n").map((line, index) => (
       <React.Fragment key={index}>
@@ -237,9 +288,16 @@ function PostCard({ post, detail, profile }: any) {
 
   const renderReplies = (replies: any[]) => {
     return replies?.map(reply => (
-      <React.Fragment key={reply.id}>
+      <React.Fragment
+        key={reply.id}
+      >
         <div
           className="border rounded-lg shadow-md p-4 mb-4 bg-white relative"
+          id={reply.id}
+          ref={(el) => {
+            if (el)
+              replyRefs.current[reply.id] = el
+          }}
         >
           <div className="flex flex-row justify-between items-center w-full mb-3">
             <div className="flex flex-start justify-start w-full gap-4 items-center">
@@ -345,8 +403,14 @@ function PostCard({ post, detail, profile }: any) {
                 </>
               )
             : (
-                <Link href={`/post/${post?.id}`} className="z-10">
-                  <div className="flex flex-row justify-between items-center w-full mb-3">
+                <Link
+                  href={`/post/${post?.id}`}
+                  className="z-10"
+                >
+                  <div
+                    className="flex flex-row justify-between items-center w-full mb-3"
+                    ref={ref} // Observer untuk deteksi scroll
+                  >
                     <div className="flex flex-start justify-start w-full gap-4 items-center">
                       <p className="text-sm text-gray-700">
                         <Link href={`/profile/${post?.user?.id}?username=${post?.user.username}`} className="hover:underline font-semibold">

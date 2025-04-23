@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import {
+  IncrementReplyView,
   createReplies,
   deleteReplies,
   getAllReplies,
@@ -18,6 +19,7 @@ interface ReplyState {
   fetchAllReplies: () => Promise<void>
   addReply: (payload: ReplyPayload) => Promise<void>
   removeReply: (replyId: string) => Promise<void>
+  IncrementReplyView: (replyId: string, userId: string) => Promise<void>
 }
 
 const useReplyStore = create<ReplyState>(set => ({
@@ -45,6 +47,18 @@ const useReplyStore = create<ReplyState>(set => ({
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to create reply", isLoading: false })
+    }
+  },
+
+  IncrementReplyView: async (replyId, userId) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await IncrementReplyView(replyId, userId)
+      set({ isLoading: false })
+      return response
+    }
+    catch (error: any) {
+      set({ error: error.response?.data?.message || "Failed to increment reply view", isLoading: false })
     }
   },
 

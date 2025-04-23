@@ -40,3 +40,25 @@ export function timeAgo(createdAt: any) {
   const diffInDays = Math.floor(diffInHours / 24)
   return rtf.format(-diffInDays, "day")
 }
+
+export function toLocalDateTime(dateString: string) {
+  const date: any = new Date(dateString)
+
+  if (Number.isNaN(date)) {
+    return "Invalid date"
+  }
+
+  // Contoh hasil: "21 April 2025 pukul 15.09"
+  const datePart = date.toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+
+  const timePart = date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+
+  return `${datePart} at ${timePart}`
+}

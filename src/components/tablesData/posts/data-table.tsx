@@ -113,13 +113,14 @@ import {
 } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import usePostStore from "@/context/post"
+import { toLocalDateTime } from "@/lib/utils"
 
 export const schema = z.object({
   id: z.string(),
   userId: z.string(),
   content: z.string(),
   filteredContent: z.string(),
-  viewCount: z.number(),
+  postView: z.array(z.any()),
   createdAt: z.string(),
   updatedAt: z.string(),
   user: z.object({
@@ -177,7 +178,7 @@ function columns(
       accessorKey: "viewCount",
       header: "Views",
       cell: ({ row }) => (
-        <div className="text-left">{row.original.viewCount}</div>
+        <div className="text-left">{row.original.postView.length}</div>
       ),
     },
     {
@@ -211,7 +212,7 @@ function columns(
       accessorKey: "createdAt",
       header: "Created At",
       cell: ({ row }) => (
-        <span>{new Date(row.original.createdAt).toLocaleString()}</span>
+        <span>{toLocalDateTime(new Date(row.original.createdAt).toLocaleString())}</span>
       ),
     },
     {
@@ -295,10 +296,11 @@ export function DataTable({
     () => data?.map(({ id }) => id) || [],
     [data],
   )
+  const cols = columns(setRowData, setIsDialogOpenDelete)
 
   const table = useReactTable({
     data,
-    columns: columns(setRowData, setIsDialogOpenDelete),
+    columns: cols,
     state: {
       sorting,
       columnVisibility,
@@ -342,6 +344,10 @@ export function DataTable({
           className="!w-1/2 justify-center !block"
           name="content"
           placeholder="Find data..."
+          onChange={(e) => {
+            const value = e.target.value.toLowerCase()
+            table.setGlobalFilter(value)
+          }}
         />
         <div className="flex items-center gap-2">
           <DropdownMenu>
@@ -397,12 +403,12 @@ export function DataTable({
             id={sortableId}
           >
             <Table>
-              <TableHeader className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+              <TableHeader className="sticky top-0 z-10 bg-blue-500 hover:!bg-blue-600">
                 {table.getHeaderGroups().map(headerGroup => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {
                       return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
+                        <TableHead key={header.id} colSpan={header.colSpan} className="text-white">
                           {header.isPlaceholder
                             ? null
                             : flexRender(
@@ -430,7 +436,7 @@ export function DataTable({
                   : (
                       <TableRow>
                         <TableCell
-                          colSpan={columns.length}
+                          colSpan={cols.length}
                           className="h-24 text-center w-full"
                         >
                           No results.

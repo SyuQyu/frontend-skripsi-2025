@@ -51,3 +51,10 @@ export function deletePost(postId: string) {
     method: "DELETE",
   })
 }
+
+export function IncrementPostView(postId: string, userId: string) {
+  return fetchInstance(`/posts/increment/view`, {
+    method: "POST",
+    body: JSON.stringify({ postId, userId }),
+  })
+}
