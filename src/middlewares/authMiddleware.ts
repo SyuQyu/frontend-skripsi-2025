@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import jwt from "jsonwebtoken"
 import { removeTokens, setTokens } from "@/lib/cookies"
 import { refreshToken as refreshTokenEndpoint } from "@/endpoints/auth"
 
@@ -65,7 +64,15 @@ export async function authMiddleware(req: NextRequest) {
       // Check role if accessing /admin
       if (currentPath.startsWith(ADMIN_PATH)) {
         try {
-          const decoded: any = jwt.decode(accessToken)
+          const base64Url = accessToken.split(".")[1]
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split("")
+              .map(c => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`)
+              .join(""),
+          )
+          const decoded: any = JSON.parse(jsonPayload)
           const role = decoded?.roleName
           if (role !== "Admin") {
             return NextResponse.redirect(new URL("/", req.url)) // or "/unauthorized"

@@ -21,6 +21,8 @@ export default antfu({
   rules: {
     "react/no-unescaped-entities": "off",
     "@next/next/no-page-custom-font": "off",
+    "unused-imports/no-unused-vars": "off",
+    "antfu/top-level-function": "off",
     "jsx-quotes": ["error", "prefer-double"],
     "no-alert": "off",
     "no-warning-comments": "off",

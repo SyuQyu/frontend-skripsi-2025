@@ -243,10 +243,9 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
 export function DataTable({
   data: initialData,
 }: {
-  data: z.infer<typeof schema>[]
+  data: z.infer<any>[]
 }) {
   const [data, setData] = React.useState(initialData)
-  // eslint-disable-next-line unused-imports/no-unused-vars
   const [isDialogOpenEdit, setIsDialogOpenEdit] = React.useState(false)
   const [isDialogOpenDelete, setIsDialogOpenDelete] = React.useState(false)
   const [rowData, setRowData] = React.useState<any>(null)

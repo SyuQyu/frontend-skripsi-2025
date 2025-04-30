@@ -16,10 +16,8 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
   SortableContext,
   arrayMove,
-  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -37,40 +35,24 @@ import {
 } from "@tanstack/react-table"
 import {
   Check,
-  CheckCircle2Icon,
-  CheckCircleIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
-  ChevronsUpDown,
   ColumnsIcon,
-  GripVerticalIcon,
-  LoaderIcon,
   MoreVerticalIcon,
   Pencil,
   PlusIcon,
   Trash2,
-  TrendingUpIcon,
   X,
 } from "lucide-react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { z } from "zod"
 
 import { useFormik } from "formik"
 import * as Yup from "yup"
 import { toast } from "@/components/ui/use-toast"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -88,17 +70,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 import {
   Table,
   TableBody,
@@ -111,10 +82,8 @@ import {
   Tabs,
   TabsContent,
 } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import useTagStore from "@/context/tags"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn, toLocalDateTime } from "@/lib/utils"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { toLocalDateTime } from "@/lib/utils"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import useGoodWordStore from "@/context/goodWords"
 import useBadWordStore from "@/context/badWords"
@@ -226,15 +195,12 @@ export function DataTable({
   badWords: any
 }) {
   const [data, setData] = React.useState(initialData)
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  const [dataBadWords, setDataBadWords] = React.useState(badWords)
   const [isDialogOpenCreate, setIsDialogOpenCreate] = React.useState(false)
   const [isDialogOpenEdit, setIsDialogOpenEdit] = React.useState(false)
   const [isDialogOpenDelete, setIsDialogOpenDelete] = React.useState(false)
   const [rowData, setRowData] = React.useState<any>(null)
   React.useEffect(() => {
     setData(initialData)
-    setDataBadWords(badWords)
   }, [initialData])
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility]
@@ -539,8 +505,6 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
   const { addBadWord, editBadWord, removeBadWord } = useBadWordStore()
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = React.useState(false)
   const [open, setOpen] = React.useState(false)
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  const [value, setValue] = React.useState(data?.badWordId || "")
   const [newBadWord, setNewBadWord] = React.useState("")
   const [isNewBadWordInputVisible, setIsNewBadWordInputVisible] = React.useState(false)
   const [editingBadWordId, setEditingBadWordId] = React.useState<string | null>(null)
@@ -648,7 +612,6 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
         badWords.push({ word: newBadWord, id: response.badWord.id })
         setNewBadWord("")
         setIsNewBadWordInputVisible(false)
-        setValue(response.badWord.id)
         formik.setFieldValue("badWordId", response.badWord.id)
       }
       else {
@@ -778,7 +741,6 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
                                   onSelect={() => {
                                     if (editingBadWordId === item.value)
                                       return
-                                    setValue(item.value)
                                     formik.setFieldValue("badWordId", item.value)
                                     setOpen(false)
                                   }}

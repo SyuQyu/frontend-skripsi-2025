@@ -1,4 +1,3 @@
-/* eslint-disable antfu/top-level-function */
 "use client"
 
 import * as React from "react"
