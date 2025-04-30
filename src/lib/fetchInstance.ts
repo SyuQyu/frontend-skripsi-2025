@@ -1,6 +1,6 @@
 import { getAccessToken } from "@/lib/cookies"
 
-const baseURL = process.env.NEXT_PUBLIC_API || "http://localhost:4000"
+const baseURL = process.env.NEXT_PUBLIC_API
 interface FetchOptions extends RequestInit {
   retries?: number // Number of retry attempts
   retryDelay?: number // Initial delay before retrying (in ms)
