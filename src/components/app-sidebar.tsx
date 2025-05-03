@@ -57,6 +57,11 @@ const data = {
       icon: FileIcon,
     },
     {
+      title: "Replies",
+      url: "/replies",
+      icon: FileIcon,
+    },
+    {
       title: "Tags",
       url: "/tags",
       icon: FolderIcon,
@@ -161,7 +166,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   React.useEffect(() => {
     const fetchUser = async () => {
       const response = await getLoggedInUser()
-      if (response.error) {
+      if (response.status === "error") {
         console.error("Error fetching user data:", response.message)
       }
     }
@@ -169,7 +174,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, [])
 
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar className="bg-white" collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -185,7 +190,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
         {/* <NavDocuments items={data.words} /> */}
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useFormik } from "formik"
 import { Check, CircleAlert, Ellipsis, Heart, Reply, Trash, X } from "lucide-react"
 import { useRouter } from "next/navigation"
+import clsx from "clsx"
 import { timeAgo } from "@/lib/utils"
 import { Button, DropDownMenu, Input } from ".."
 import { useToast } from "@/components/ui/use-toast"
@@ -17,8 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 function PostCard({ post, detail, profile }: any) {
   const { addReply, removeReply, IncrementReplyView } = useReplyStore()
-
-  const { fetchPostById, removePost, fetchAllPosts, fetchPostByUser, IncrementPostView } = usePostStore()
+  const { fetchPostById, removePost, fetchAllPosts, fetchPostByUser, IncrementPostView, checkWord } = usePostStore()
   const { addLike, fetchLikesByParent } = useLikeStore()
   const { addReport } = useReportStore()
   const { user } = useAuthStore()
@@ -43,6 +43,10 @@ function PostCard({ post, detail, profile }: any) {
     id: post?.id,
   })
 
+  // State untuk filtered words di reply
+  const [filteredWords, setFilteredWords] = useState<any[]>([])
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+
   const refetchPost = () => {
     if (!profile) {
       fetchPostById(post?.id)
@@ -52,6 +56,7 @@ function PostCard({ post, detail, profile }: any) {
       fetchPostByUser(user?.id)
     }
   }
+
   const formik = useFormik({
     initialValues: { content: "" },
     validate: (values) => {
@@ -71,23 +76,21 @@ function PostCard({ post, detail, profile }: any) {
           userId: user?.id,
           content: values.content,
         }
-
         if (activeReplyId !== null) {
           payload = {
             ...payload,
             parentId: activeReplyId,
           }
         }
-        // console.log(payload)
         await addReply(payload)
         toast({
           icon: <Check className="size-6 text-green-500" />,
           title: "Reply Successful",
           description: "Your reply has been posted!",
         })
-        fetchPostById(post?.id) // Fetch post to update replies
-
-        resetForm() // Reset form after posting
+        fetchPostById(post?.id) // update replies
+        resetForm()
+        setFilteredWords([]) // reset filtered words setelah submit
       }
       catch {
         toast({
@@ -102,9 +105,29 @@ function PostCard({ post, detail, profile }: any) {
     },
   })
 
+  // Handler input change reply dengan debounce dan cek kata tidak sesuai
+  const handleReplyInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const rawValue = e.target.value
+    formik.setFieldValue("content", rawValue)
+
+    if (debounceRef.current)
+      clearTimeout(debounceRef.current)
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const result: any = await checkWord(rawValue)
+        setFilteredWords(result.filteredWords || [])
+      }
+      catch (error) {
+        console.error("Filtering failed:", error)
+      }
+    }, 500)
+  }
+
   const handleReplyClick = (replyId: string) => {
     setActiveReplyId(prev => (prev === replyId ? null : replyId))
-    formik.resetForm() // Reset agar input bersih saat pindah reply
+    formik.resetForm()
+    setFilteredWords([]) // bersihkan saat pindah reply juga
   }
 
   const handleReportClick = (data: string, replyId?: string) => {
@@ -113,9 +136,6 @@ function PostCard({ post, detail, profile }: any) {
       id: replyId || post?.id,
     })
     setIsDialogOpen(true)
-    // console.log("Report clicked", data, replyId)
-    // Handle report logic here
-    // You can use the data and replyId to identify which post or reply to report
   }
 
   const handleReportSubmit = async () => {
@@ -166,7 +186,7 @@ function PostCard({ post, detail, profile }: any) {
         if (replyId) {
           await removeReply(replyId)
         }
-        setActiveReplyId(null) // Reset ke post utama
+        setActiveReplyId(null)
       }
       toast({
         icon: <Check className="size-6 text-green-500" />,
@@ -186,7 +206,8 @@ function PostCard({ post, detail, profile }: any) {
   }
 
   const handlePostClick = () => {
-    setActiveReplyId(null) // Reset ke post utama
+    setActiveReplyId(null)
+    setFilteredWords([]) // bersihkan juga
   }
 
   const handleLikes = async (type: string, id: string) => {
@@ -227,9 +248,9 @@ function PostCard({ post, detail, profile }: any) {
         if (entry.isIntersecting && !hasBeenSeenRef.current) {
           hasBeenSeenRef.current = true
           if (post?.id && !activeReplyId) {
-            await IncrementPostView(post?.id, user?.id) // Increment view count for post
+            await IncrementPostView(post?.id, user?.id)
           }
-          observer.disconnect() // Disconnect observer after triggering onView
+          observer.disconnect()
         }
       },
       { threshold: 0.5 },
@@ -258,7 +279,6 @@ function PostCard({ post, detail, profile }: any) {
       }
     }, { threshold: 0.5 })
 
-    // Observe semua replyRefs
     Object.values(replyRefs.current).forEach((el) => {
       if (el)
         observer.observe(el)
@@ -288,9 +308,7 @@ function PostCard({ post, detail, profile }: any) {
 
   const renderReplies = (replies: any[]) => {
     return replies?.map(reply => (
-      <React.Fragment
-        key={reply.id}
-      >
+      <React.Fragment key={reply.id}>
         <div
           className="border rounded-lg shadow-md p-4 mb-4 bg-white relative"
           id={reply.id}
@@ -300,7 +318,7 @@ function PostCard({ post, detail, profile }: any) {
           }}
         >
           <div className="flex flex-row justify-between items-center w-full mb-3">
-            <div className="flex flex-start justify-start w-full gap-4 items-center">
+            <div className="flex flex-start justify-start sm:flex-row flex-col w-full sm:gap-4 gap-1 sm:items-center items-start">
               <p className="text-sm text-gray-700">
                 <Link href={`/profile/${reply?.user.id}?username=${reply?.user.username}`} className="hover:underline font-semibold">
                   @
@@ -318,14 +336,12 @@ function PostCard({ post, detail, profile }: any) {
                   <CircleAlert className="size-5 text-red-500 mr-1" />
                   Report
                 </Button>
-                {
-                  user?.id === reply?.user.id && (
-                    <Button className="text-sm text-gray-700 hover:text-gray-900 !border-none" onClick={() => handleDeleteClick("reply", reply?.id)}>
-                      <Trash className="size-5 text-blue-500 mr-1" />
-                      delete
-                    </Button>
-                  )
-                }
+                {user?.id === reply?.user.id && (
+                  <Button className="text-sm text-gray-700 hover:text-gray-900 !border-none" onClick={() => handleDeleteClick("reply", reply?.id)}>
+                    <Trash className="size-5 text-blue-500 mr-1" />
+                    delete
+                  </Button>
+                )}
               </div>
             </DropDownMenu>
           </div>
@@ -348,22 +364,51 @@ function PostCard({ post, detail, profile }: any) {
 
           {/* Input muncul di bawah reply yang ditekan */}
           {activeReplyId === reply?.id && (
-            <form onSubmit={formik.handleSubmit} className="mt-4">
-              <Input
-                className="w-full"
-                isTextarea={true}
-                name="content"
-                value={formik.values.content}
-                onChange={(e) => {
-                  formik.setFieldValue("content", e.target.value)
-                }}
+            <>
+              {filteredWords.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {filteredWords.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2 bg-red-100 border border-red-400 rounded px-2 py-1">
+                      <span className="text-red-700 font-semibold">{item.original}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-blue-600 hover:underline p-0 h-auto"
+                        onClick={() => {
+                          const replaced = formik.values.content.replace(
+                            new RegExp(item.rawWord, "gi"),
+                            item.replacement,
+                          )
+                          formik.setFieldValue("content", replaced)
 
-                error={formik.touched.content && formik.errors.content ? formik.errors.content : null}
-                length={formik.values.content.length.toString()}
-                placeholder="Balas komentar..."
-              />
-              <button type="submit" className="mt-2 bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600">Reply</button>
-            </form>
+                          checkWord(replaced).then((result: any) => {
+                            setFilteredWords(result.filteredWords || [])
+                          })
+                        }}
+                      >
+                        Replace with
+                        {" "}
+                        <span className="font-bold ml-1">{item.replacement}</span>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <form onSubmit={formik.handleSubmit} className={clsx(filteredWords.length > 0 ? "mt-1" : "mt-4")}>
+                <Input
+                  className="w-full"
+                  isTextarea={true}
+                  name="content"
+                  value={formik.values.content}
+                  onChange={handleReplyInputChange}
+                  error={formik.touched.content && formik.errors.content ? formik.errors.content : null}
+                  length={formik.values.content.length.toString()}
+                  placeholder="Balas komentar..."
+                />
+                <button type="submit" className="mt-2 bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600">Reply</button>
+              </form>
+            </>
           )}
         </div>
 
@@ -379,55 +424,50 @@ function PostCard({ post, detail, profile }: any) {
     <>
       <div
         className="border rounded-lg shadow-md p-4 mb-4 bg-white relative cursor-pointer z-10"
-        onClick={handlePostClick} // Klik post utama untuk memunculkan input
+        onClick={handlePostClick}
       >
-        {
-          detail
-            ? (
-                <>
-                  <div className="flex flex-row justify-between items-center w-full mb-3">
-                    <div className="flex flex-start justify-start w-full gap-4 items-center">
-                      <p className="text-sm text-gray-700">
-                        <Link href={`/profile/${post?.user?.id}?username=${post?.user.username}`} className="hover:underline font-semibold">
-                          @
-                          {author}
-                        </Link>
-                      </p>
-                      <span className="text-sm text-gray-500">{createdAt}</span>
-                    </div>
+        {detail
+          ? (
+              <>
+                <div className="flex flex-row justify-between items-center w-full mb-3">
+                  <div className="flex flex-start justify-start sm:flex-row flex-col w-full sm:gap-4 gap-1 sm:items-center items-start">
+                    <p className="text-sm text-gray-700">
+                      <Link href={`/profile/${post?.user?.id}?username=${post?.user.username}`} className="hover:underline font-semibold">
+                        @
+                        {author}
+                      </Link>
+                    </p>
+                    <span className="text-sm text-gray-500">{createdAt}</span>
                   </div>
+                </div>
 
-                  <p className="text-sm text-gray-600 mb-4 break-words">
-                    {formatContent(filteredContent)}
-                  </p>
-                </>
-              )
-            : (
-                <Link
-                  href={`/post/${post?.id}`}
-                  className="z-10"
+                <p className="text-sm text-gray-600 mb-4 break-words">
+                  {formatContent(filteredContent)}
+                </p>
+              </>
+            )
+          : (
+              <Link href={`/post/${post?.id}`} className="z-10">
+                <div
+                  className="flex flex-row justify-between items-center w-full mb-3"
+                  ref={ref}
                 >
-                  <div
-                    className="flex flex-row justify-between items-center w-full mb-3"
-                    ref={ref} // Observer untuk deteksi scroll
-                  >
-                    <div className="flex flex-start justify-start w-full gap-4 items-center">
-                      <p className="text-sm text-gray-700">
-                        <Link href={`/profile/${post?.user?.id}?username=${post?.user.username}`} className="hover:underline font-semibold">
-                          @
-                          {author}
-                        </Link>
-                      </p>
-                      <span className="text-sm text-gray-500">{createdAt}</span>
-                    </div>
+                  <div className="flex flex-start justify-start sm:flex-row flex-col w-full sm:gap-4 gap-1 sm:items-center items-start">
+                    <p className="text-sm text-gray-700">
+                      <Link href={`/profile/${post?.user?.id}?username=${post?.user.username}`} className="hover:underline font-semibold">
+                        @
+                        {author}
+                      </Link>
+                    </p>
+                    <span className="text-sm text-gray-500">{createdAt}</span>
                   </div>
+                </div>
 
-                  <p className="text-sm text-gray-600 mb-4 break-words">
-                    {formatContent(filteredContent)}
-                  </p>
-                </Link>
-              )
-        }
+                <p className="text-sm text-gray-600 mb-4 break-words">
+                  {formatContent(filteredContent)}
+                </p>
+              </Link>
+            )}
 
         <div className="flex space-x-2 justify-start items-center gap-1 text-gray-500">
           <Heart className="size-4" fill={post?.likes?.some((like: { userId: any }) => like.userId === user?.id) ? "#be185d" : "white"} onClick={() => handleLikes("post", post.id)} />
@@ -440,22 +480,51 @@ function PostCard({ post, detail, profile }: any) {
 
         {/* Input untuk post utama */}
         {activeReplyId === null && detail && (
-          <form onSubmit={formik.handleSubmit} className="mt-4">
-            <Input
-              className="w-full"
-              isTextarea={true}
-              name="content"
-              value={formik.values.content}
-              onChange={(e) => {
-                formik.setFieldValue("content", e.target.value)
-              }}
+          <>
+            {filteredWords.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {filteredWords.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2 bg-red-100 border border-red-400 rounded px-2 py-1">
+                    <span className="text-red-700 font-semibold">{item.original}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-blue-600 hover:underline p-0 h-auto"
+                      onClick={() => {
+                        const replaced = formik.values.content.replace(
+                          new RegExp(item.rawWord, "gi"),
+                          item.replacement,
+                        )
+                        formik.setFieldValue("content", replaced)
 
-              error={formik.touched.content && formik.errors.content ? formik.errors.content : null}
-              length={formik.values.content.length.toString()}
-              placeholder="Balas komentar..."
-            />
-            <button type="submit" className="mt-2 bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600">Reply</button>
-          </form>
+                        checkWord(replaced).then((result: any) => {
+                          setFilteredWords(result.filteredWords || [])
+                        })
+                      }}
+                    >
+                      Replace with
+                      {" "}
+                      <span className="font-bold ml-1">{item.replacement}</span>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <form onSubmit={formik.handleSubmit} className={clsx(filteredWords.length > 0 ? "mt-1" : "mt-4")}>
+              <Input
+                className="w-full"
+                isTextarea={true}
+                name="content"
+                value={formik.values.content}
+                onChange={handleReplyInputChange}
+                error={formik.touched.content && formik.errors.content ? formik.errors.content : null}
+                length={formik.values.content.length.toString()}
+                placeholder="Balas komentar..."
+              />
+              <button type="submit" className="mt-2 bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600">Reply</button>
+            </form>
+          </>
         )}
         <div className="absolute top-4 right-4 z-20">
           <DropDownMenu trigger={<Ellipsis className="size-5 cursor-pointer text-black" />}>
@@ -467,18 +536,17 @@ function PostCard({ post, detail, profile }: any) {
                 <CircleAlert className="size-5 text-red-500 mr-1" />
                 Report
               </Button>
-              {
-                user?.id === post?.user.id && (
-                  <Button className="text-sm text-gray-700 hover:text-gray-900 !border-none" onClick={() => handleDeleteClick("post")}>
-                    <Trash className="size-5 text-blue-500 mr-1" />
-                    delete
-                  </Button>
-                )
-              }
+              {user?.id === post?.user.id && (
+                <Button className="text-sm text-gray-700 hover:text-gray-900 !border-none" onClick={() => handleDeleteClick("post")}>
+                  <Trash className="size-5 text-blue-500 mr-1" />
+                  delete
+                </Button>
+              )}
             </div>
           </DropDownMenu>
         </div>
       </div>
+
       {post?.replies && detail && post?.replies.length > 0 && (
         <div className="mt-8 border-l-2 pl-4">
           <h3 className="text-sm font-semibold text-gray-700 pb-4">Replies:</h3>
@@ -519,7 +587,9 @@ function PostCard({ post, detail, profile }: any) {
             placeholder="Tulis alasan laporan..."
           />
           <DialogFooter>
-            <Button className="bg-blue-500 text-white py-2 px-4 rounded-md" onClick={() => handleReportSubmit()}>Kirim Laporan</Button>
+            <Button className="bg-blue-500 text-white py-2 px-4 rounded-md" onClick={() => handleReportSubmit()}>
+              Kirim Laporan
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

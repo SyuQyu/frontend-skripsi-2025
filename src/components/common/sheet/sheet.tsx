@@ -9,34 +9,34 @@ import {
 } from "@/components/ui/sheet"
 
 interface SheetComponentProps {
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   button?: string | React.ReactNode
   title?: string
   description?: string
   children?: React.ReactNode
   header?: boolean
-  onOpenChange?: (open: boolean) => void // Add this prop
 }
 
 export default function SheetComponent({
+  open,
+  onOpenChange,
   button = "Open",
   title = "Title",
   description = "Description",
   header = false,
   children,
-  onOpenChange, // Destructure the prop
 }: SheetComponentProps) {
   return (
-    <Sheet onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger>{button}</SheetTrigger>
       <SheetContent>
-        {
-          header && (
-            <SheetHeader>
-              <SheetTitle>{title}</SheetTitle>
-              <SheetDescription>{description}</SheetDescription>
-            </SheetHeader>
-          )
-        }
+        {header && (
+          <SheetHeader>
+            <SheetTitle>{title}</SheetTitle>
+            <SheetDescription>{description}</SheetDescription>
+          </SheetHeader>
+        )}
         {children}
       </SheetContent>
     </Sheet>

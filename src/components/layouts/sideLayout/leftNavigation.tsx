@@ -128,9 +128,9 @@ export default function Header() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
-            <DialogTitle>Cari</DialogTitle>
+            <DialogTitle>Search</DialogTitle>
             <DialogDescription>
-              Cari cerita yang kamu inginkan
+              Find the story you’re looking for
             </DialogDescription>
           </DialogHeader>
           <form className="w-full flex flex-col gap-4" onSubmit={handleSearch}>
@@ -138,13 +138,13 @@ export default function Header() {
               className="w-full"
               isTextarea={false}
               name="search"
-              placeholder="Carilah cerita yang kamu inginkan..."
+              placeholder="Search for the story you want..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
             <DialogFooter>
               <Button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded-md">
-                Cari
+                Search
               </Button>
             </DialogFooter>
           </form>

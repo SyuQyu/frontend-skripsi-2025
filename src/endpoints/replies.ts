@@ -8,7 +8,7 @@ export function createReplies(payload: any) {
 }
 
 export function getAllReplies() {
-  return fetchInstance("/replies/all")
+  return fetchInstance("/replies")
 }
 
 export function deleteReplies(replyId: string) {

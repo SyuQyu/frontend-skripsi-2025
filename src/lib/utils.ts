@@ -24,7 +24,7 @@ export function timeAgo(createdAt: any) {
   const now = new Date()
   const diffInSeconds = Math.floor((now.getTime() - createdDate.getTime()) / 1000)
 
-  const rtf = new Intl.RelativeTimeFormat("id", { numeric: "auto" })
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" })
 
   if (diffInSeconds < 60) {
     return rtf.format(-diffInSeconds, "second")

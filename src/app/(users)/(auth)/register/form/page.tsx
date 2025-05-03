@@ -119,7 +119,7 @@ export default function Form() {
         styleCard="w-full flex flex-col gap-5 xl:!px-10 !px-5 !py-0 xl:!py-[24px] min-h-screen !rounded-none xl:max-w-[700px] xl:border-solid border-none"
         styleContent="!p-0"
       >
-        <form onSubmit={formik.handleSubmit} className="gap-8 flex flex-col">
+        <form onSubmit={formik.handleSubmit} className="sm:gap-8 gap-4 flex flex-col">
           <Input
             label="Username"
             type="text"

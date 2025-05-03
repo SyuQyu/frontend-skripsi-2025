@@ -24,6 +24,7 @@ interface InputCustomProps {
   length?: string
   autoFocus?: boolean
   readOnly?: boolean
+  autoComplete?: string
 }
 
 export default function InputCustom({
@@ -46,6 +47,7 @@ export default function InputCustom({
   length = "",
   autoFocus = false,
   readOnly = false,
+  autoComplete,
 }: InputCustomProps) {
   const [isFocused, setIsFocused] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -76,6 +78,7 @@ export default function InputCustom({
                 placeholder={placeholder}
                 value={value}
                 defaultValue={defaultValue}
+                autoComplete={autoComplete}
                 name={name}
                 onChange={onChange}
                 onClick={onClick}
@@ -97,6 +100,7 @@ export default function InputCustom({
                 placeholder={placeholder}
                 value={value}
                 defaultValue={defaultValue}
+                autoComplete={autoComplete}
                 onClick={onClick}
                 name={name}
                 onChange={onChange}

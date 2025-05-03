@@ -39,7 +39,7 @@ interface AuthState {
   checkPassword: (userId: string, password: string) => Promise<any>
 }
 
-const useAuthStore = create<AuthState>(set => ({
+const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   error: null,
   isLoading: false,
@@ -58,10 +58,13 @@ const useAuthStore = create<AuthState>(set => ({
       }
       else {
         set({ isLoading: false })
+        get().logout()
+        console.error("Error fetching user data:", response.message)
         throw new Error(response.message || "Failed to fetch user")
       }
     }
     catch (error: any) {
+      get().logout()
       set({ error: error.response?.message || "Failed to fetch user", isLoading: false })
     }
   },

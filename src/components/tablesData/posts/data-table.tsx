@@ -16,10 +16,8 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
 import {
   SortableContext,
   arrayMove,
-  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -45,6 +43,7 @@ import {
   ChevronsLeftIcon,
   ChevronsRightIcon,
   ColumnsIcon,
+  EyeIcon,
   GripVerticalIcon,
   LoaderIcon,
   MoreVerticalIcon,
@@ -156,6 +155,8 @@ export const schema = z.object({
 function columns(
   setRowData: (data: z.infer<typeof schema>) => void,
   setIsDialogOpenDelete: (open: boolean) => void,
+  setIsDialogOpenDetail: (open: boolean) => void,
+  setDetailData: (data: z.infer<typeof schema>) => void,
 ): ColumnDef<z.infer<typeof schema>>[] {
   return [
     {
@@ -170,9 +171,34 @@ function columns(
     {
       accessorKey: "filteredContent",
       header: "Filtered Content",
-      cell: ({ row }) => (
-        <div className="max-w-xs truncate">{row.original.filteredContent}</div>
-      ),
+      cell: ({ row }) => {
+        const label = row.original.filteredContent || row.original.content || "No content"
+        const shortLabel = label.length > 40 ? `${label.slice(0, 40)}...` : label
+        return (
+          <div className="flex items-center gap-2">
+            <div className="font-medium text-slate-800 dark:text-slate-200">
+              {shortLabel}
+            </div>
+            <EyeIcon
+              className="size-4 text-blue-600 cursor-pointer transition-colors duration-200 hover:text-blue-800"
+              aria-label="View details"
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setDetailData(row.original)
+                setIsDialogOpenDetail(true)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  setDetailData(row.original)
+                  setIsDialogOpenDetail(true)
+                }
+              }}
+            />
+          </div>
+        )
+      },
     },
     {
       accessorKey: "viewCount",
@@ -270,7 +296,8 @@ export function DataTable({
   const [data, setData] = React.useState(initialData)
   const [isDialogOpenDelete, setIsDialogOpenDelete] = React.useState(false)
   const [rowData, setRowData] = React.useState<any>(null)
-
+  const [isDialogOpenDetail, setIsDialogOpenDetail] = React.useState(false)
+  const [detailData, setDetailData] = React.useState<z.infer<typeof schema> | null>(null)
   React.useEffect(() => {
     setData(initialData)
   }, [initialData])
@@ -296,7 +323,7 @@ export function DataTable({
     () => data?.map(({ id }) => id) || [],
     [data],
   )
-  const cols = columns(setRowData, setIsDialogOpenDelete)
+  const cols = columns(setRowData, setIsDialogOpenDelete, setIsDialogOpenDetail, setDetailData)
 
   const table = useReactTable({
     data,
@@ -388,6 +415,13 @@ export function DataTable({
             setIsDialogOpen={setIsDialogOpenDelete}
             forWhat="delete"
           />
+          {detailData && (
+            <PostDetailDialog
+              data={detailData}
+              isDialogOpen={isDialogOpenDetail}
+              setIsDialogOpen={setIsDialogOpenDetail}
+            />
+          )}
         </div>
       </div>
       <TabsContent
@@ -554,6 +588,108 @@ export function DataTable({
   )
 }
 
+function PostDetailDialog({
+  data,
+  isDialogOpen,
+  setIsDialogOpen,
+}: {
+  data: z.infer<typeof schema>
+  isDialogOpen: boolean
+  setIsDialogOpen: (open: boolean) => void
+}) {
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogContent className="max-w-2xl rounded-lg bg-white dark:bg-slate-900 p-6 shadow-lg">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Post Details
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 text-sm text-gray-700 dark:text-gray-300">
+          {/* Username */}
+          <div>
+            <span className="font-semibold">Username: </span>
+            <span>{data.user.username}</span>
+          </div>
+
+          {/* Content */}
+          <div>
+            <span className="font-semibold">Content:</span>
+            <p className="mt-1 whitespace-pre-line rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-200">
+              {data.content}
+            </p>
+          </div>
+          {data.filteredContent === data.content && (
+            <div>
+              <span className="font-semibold">Filtered Content:</span>
+              <p className="mt-1 whitespace-pre-line rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-200">
+                {data.filteredContent}
+              </p>
+            </div>
+          )}
+
+          {/* Tags */}
+          <div>
+            <span className="font-semibold">Tags: </span>
+            {data.tags && data.tags.length > 0
+              ? (
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {data.tags.map((tag, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-xs px-2">
+                        {tag.tag.tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )
+              : (
+                  <span className="text-gray-400 italic">No tags</span>
+                )}
+          </div>
+
+          {/* Likes, Reports, Replies counts in flex */}
+          <div className="flex gap-6 mt-2">
+            <div>
+              <span className="font-semibold">Likes:</span>
+              {" "}
+              {data.likes.length}
+            </div>
+            <div>
+              <span className="font-semibold">Reports:</span>
+              {" "}
+              {data.reports.length}
+            </div>
+            <div>
+              <span className="font-semibold">Replies:</span>
+              {" "}
+              {data.replies.length}
+            </div>
+          </div>
+
+          {/* Created and Updated at */}
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-4 space-y-1">
+            <div>
+              <span className="italic font-mono">Created At:</span>
+              {" "}
+              {toLocalDateTime(new Date(data.createdAt).toLocaleString())}
+            </div>
+            <div>
+              <span className="italic font-mono">Updated At:</span>
+              {" "}
+              {toLocalDateTime(new Date(data.updatedAt).toLocaleString())}
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="mt-6">
+          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
 function PopUpDialog({ data, isDialogOpen, setIsDialogOpen }: any) {
   const { removePost } = usePostStore()
 

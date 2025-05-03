@@ -26,8 +26,8 @@ export default function Home() {
   const { user } = useAuthStore()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const [bannedWords, setBannedWords] = useState<string[]>([])
-  const [replacementWords, setReplacementWords] = useState<string[]>([])
+  // Simpan filteredWords lengkap
+  const [filteredWords, setFilteredWords] = useState<any[]>([])
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -68,10 +68,9 @@ export default function Home() {
         })
 
         resetForm()
+        setFilteredWords([])
         fetchAllPosts()
         setIsDialogOpen(false)
-        setBannedWords([])
-        setReplacementWords([])
       }
       catch {
         toast({
@@ -96,8 +95,7 @@ export default function Home() {
     debounceRef.current = setTimeout(async () => {
       try {
         const result: any = await checkWord(rawValue)
-        setBannedWords(result.bannedWords || [])
-        setReplacementWords(result.replacementWords || [])
+        setFilteredWords(result.filteredWords || [])
       }
       catch (error) {
         console.error("Filtering failed:", error)
@@ -130,38 +128,30 @@ export default function Home() {
                     </DialogDescription>
                   </DialogHeader>
 
-                  {bannedWords.length > 0 && (
+                  {filteredWords.length > 0 && (
                     <div className="mb-2 flex flex-wrap gap-2">
-                      {bannedWords.map((word, idx) => (
+                      {filteredWords.map((item, idx) => (
                         <div key={idx} className="flex items-center gap-2 bg-red-100 border border-red-400 rounded px-2 py-1">
-                          <span className="text-red-700 font-semibold">{word}</span>
+                          <span className="text-red-700 font-semibold">{item.original}</span>
                           <Button
                             type="button"
                             variant="ghost"
                             className="text-blue-600 hover:underline p-0 h-auto"
                             onClick={() => {
                               const replaced = formik.values.content.replace(
-                                new RegExp(`\\b${word}\\b`, "gi"),
-                                replacementWords[idx],
+                                new RegExp(item.rawWord, "gi"),
+                                item.replacement,
                               )
                               formik.setFieldValue("content", replaced)
 
                               checkWord(replaced).then((result: any) => {
-                                setBannedWords(result.bannedWords || [])
-                                setReplacementWords(result.replacementWords || [])
+                                setFilteredWords(result.filteredWords || [])
                               })
-
-                              // Hapus kata yang sudah diganti dari state
-                              const newBanned = bannedWords.filter((_, i) => i !== idx)
-                              const newReplacements = replacementWords.filter((_, i) => i !== idx)
-
-                              setBannedWords(newBanned)
-                              setReplacementWords(newReplacements)
                             }}
                           >
                             Replace with
                             {" "}
-                            <span className="font-bold ml-1">{replacementWords[idx]}</span>
+                            <span className="font-bold ml-1">{item.replacement}</span>
                           </Button>
                         </div>
                       ))}
@@ -185,17 +175,21 @@ export default function Home() {
                       placeholder="Share your story..."
                     />
 
-                    {bannedWords.length > 0 && (
+                    {filteredWords.length > 0 && (
                       <div className="border rounded p-3 bg-gray-50 whitespace-pre-wrap text-sm text-black">
-                        {formik.values.content.split(" ").map((word, idx) => {
-                          const clean = word.replace(/[.,!?]/g, "")
-                          const isBanned = bannedWords.includes(clean.toLowerCase())
+                        {formik.values.content.split(/(\s+)/).map((word, idx) => {
+                          // Biar spasi ikut split supaya render utuh
+                          const cleanWord = word.replace(/[.,!?]/g, "").toLowerCase()
+                          // Cari apakah kata ini ada di filteredWords.rawWord
+                          const matched = filteredWords.find(fw =>
+                            fw.rawWord.toLowerCase() === cleanWord,
+                          )
                           return (
                             <span
                               key={idx}
-                              className={isBanned ? "bg-red-200 text-red-800 font-semibold px-1 rounded" : ""}
+                              className={matched ? "bg-red-200 text-red-800 font-semibold px-1 rounded" : ""}
                             >
-                              {`${word} `}
+                              {word}
                             </span>
                           )
                         })}

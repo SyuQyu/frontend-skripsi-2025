@@ -36,7 +36,7 @@ const chartConfig = {
   },
   desktop: {
     label: "count",
-    color: "hsl(var(--chart-1))",
+    color: "#3b82f6",
   },
 } satisfies ChartConfig
 

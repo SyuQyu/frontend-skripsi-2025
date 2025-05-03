@@ -22,7 +22,7 @@ interface ReplyState {
   IncrementReplyView: (replyId: string, userId: string) => Promise<void>
 }
 
-const useReplyStore = create<ReplyState>(set => ({
+const useReplyStore = create<ReplyState>((set, get) => ({
   replies: [],
   selectedReply: null,
   isLoading: false,
@@ -65,8 +65,10 @@ const useReplyStore = create<ReplyState>(set => ({
   removeReply: async (replyId) => {
     set({ isLoading: true, error: null })
     try {
-      await deleteReplies(replyId)
+      const res = await deleteReplies(replyId)
+      get().fetchAllReplies()
       set({ isLoading: false })
+      return res
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to delete reply", isLoading: false })

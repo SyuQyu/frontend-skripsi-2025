@@ -45,6 +45,7 @@ import {
   ChevronsLeftIcon,
   ChevronsRightIcon,
   ColumnsIcon,
+  EyeIcon,
   GripVerticalIcon,
   LoaderIcon,
   MoreVerticalIcon,
@@ -52,12 +53,11 @@ import {
   TrendingUpIcon,
   X,
 } from "lucide-react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { z } from "zod"
 
 import { useFormik } from "formik"
 import * as Yup from "yup"
-import { toast } from "@/components/ui/use-toast"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -77,6 +77,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ConfirmDialog, Input } from "@/components/common"
+
+import { toast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -110,87 +112,117 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import useUserStore from "@/context/users"
+import { Textarea } from "@/components/ui/textarea"
+import usePostStore from "@/context/post"
 import { toLocalDateTime } from "@/lib/utils"
+import useReplyStore from "@/context/replies"
 
 export const schema = z.object({
   id: z.string(),
-  roleId: z.string(),
-  fullName: z.string().nullable(),
-  username: z.string(),
-  email: z.string(),
-  password: z.string(),
-  phone: z.string().nullable(),
-  nim: z.string().nullable(),
-  faculty: z.string().nullable(),
-  gender: z.string().nullable(),
-  firstLogin: z.boolean(),
-  profilePicture: z.string().nullable(),
-  refreshToken: z.string().nullable(),
+  userId: z.string(),
+  content: z.string(),
+  filteredContent: z.string().nullable(),
+  postView: z.array(z.any()),
+  replyView: z.array(z.any()), // <--- TAMBAHKAN INI
   createdAt: z.string(),
   updatedAt: z.string(),
+  user: z.object({
+    id: z.string(),
+    username: z.string(),
+  }),
+  likes: z.array(z.any()),
+  tags: z.array(z.any()),
+  reports: z.array(z.any()),
+  replies: z.array(z.any()),
 })
 
-function columns(setRowData: (data: z.infer<typeof schema>) => void, setIsDialogOpenEdit: (open: boolean) => void, setIsDialogOpenDelete: (open: boolean) => void): ColumnDef<z.infer<typeof schema>>[] {
+function columns(
+  setRowData: (data: z.infer<typeof schema>) => void,
+  setIsDialogOpenDelete: (open: boolean) => void,
+  setDetailData: (data: z.infer<typeof schema>) => void,
+  setIsDialogOpenDetail: (open: boolean) => void,
+): ColumnDef<z.infer<typeof schema>>[] {
   return [
-    {
-      accessorKey: "no",
-      header: "No",
-      cell: ({ row }) => (
-        <span className="text-center">
-          {row.index + 1}
-        </span>
-      ),
-    },
     {
       accessorKey: "username",
       header: "Username",
-      cell: ({ row }) => <span>{row.original.username}</span>,
-    },
-    {
-      accessorKey: "email",
-      header: "Email",
-      cell: ({ row }) => <span>{row.original.email}</span>,
-    },
-    {
-      accessorKey: "fullName",
-      header: "Full Name",
-      cell: ({ row }) => <span>{row.original.fullName ?? "-"}</span>,
-    },
-    {
-      accessorKey: "nim",
-      header: "NIM",
-      cell: ({ row }) => <span>{row.original.nim ?? "-"}</span>,
-    },
-    {
-      accessorKey: "faculty",
-      header: "Faculty",
-      cell: ({ row }) => <span>{row.original.faculty ?? "-"}</span>,
-    },
-    {
-      accessorKey: "gender",
-      header: "Gender",
-      cell: ({ row }) => <span>{row.original.gender ?? "-"}</span>,
-    },
-    {
-      accessorKey: "firstLogin",
-      header: "First Login",
       cell: ({ row }) => (
-        <span className={row.original.firstLogin ? "text-green-600" : "text-red-500"}>
-          {row.original.firstLogin ? "Yes" : "No"}
-        </span>
+        <div className="font-medium text-slate-800 dark:text-slate-200">
+          {row.original.user?.username}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "filteredContent",
+      header: "Filtered Content",
+      cell: ({ row }) => {
+        const label = row.original.filteredContent || row.original.content || "No content"
+        const shortLabel = label.length > 40 ? `${label.slice(0, 40)}...` : label
+
+        return (
+          <div className="flex items-center gap-2">
+            <div className="font-medium text-slate-800 dark:text-slate-200 truncate">{shortLabel}</div>
+            <EyeIcon
+              className="size-4 text-blue-600 cursor-pointer transition-colors duration-200 hover:text-blue-800"
+              aria-label="View reply details"
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setDetailData(row.original)
+                setIsDialogOpenDetail(true)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  setDetailData(row.original)
+                  setIsDialogOpenDetail(true)
+                }
+              }}
+            />
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "replyView",
+      header: "Views",
+      cell: ({ row }) => (
+        <div className="text-left">{row.original.replyView?.length ?? 0}</div>
+      ),
+    },
+    {
+      id: "likes",
+      header: "Likes",
+      cell: ({ row }) => (
+        <Badge variant="outline" className="text-blue-600 dark:text-blue-400">
+          {row.original.likes?.length ?? 0}
+        </Badge>
+      ),
+    },
+    {
+      id: "reports",
+      header: "Reports",
+      cell: ({ row }) => (
+        <Badge variant="outline" className="text-red-600 dark:text-red-400">
+          {row.original.reports?.length ?? 0}
+        </Badge>
+      ),
+    },
+    {
+      id: "replies",
+      header: "Replies",
+      cell: ({ row }) => (
+        <Badge variant="outline" className="text-green-600 dark:text-green-400">
+          {row.original.replies?.length ?? 0}
+        </Badge>
       ),
     },
     {
       accessorKey: "createdAt",
       header: "Created At",
-      cell: ({ row }) => <span>{toLocalDateTime(new Date(row.original.createdAt).toLocaleString())}</span>,
-    },
-    {
-      accessorKey: "updatedAt",
-      header: "Updated At",
-      cell: ({ row }) => <span>{toLocalDateTime(new Date(row.original.updatedAt).toLocaleString())}</span>,
+      cell: ({ row }) => (
+        <span>{toLocalDateTime(new Date(row.original.createdAt).toLocaleString())}</span>
+      ),
     },
     {
       id: "actions",
@@ -207,16 +239,6 @@ function columns(setRowData: (data: z.infer<typeof schema>) => void, setIsDialog
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onSelect={() => {
-                setRowData(row.original)
-                setIsDialogOpenEdit(true)
-              }}
-            >
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem
               className="cursor-pointer"
               onSelect={() => {
@@ -254,10 +276,11 @@ export function DataTable({
   data: z.infer<typeof schema>[]
 }) {
   const [data, setData] = React.useState(initialData)
-  const [isDialogOpenCreate, setIsDialogOpenCreate] = React.useState(false)
-  const [isDialogOpenEdit, setIsDialogOpenEdit] = React.useState(false)
   const [isDialogOpenDelete, setIsDialogOpenDelete] = React.useState(false)
   const [rowData, setRowData] = React.useState<any>(null)
+  const [detailData, setDetailData] = React.useState<z.infer<typeof schema> | null>(null)
+  const [isDialogOpenDetail, setIsDialogOpenDetail] = React.useState(false)
+
   React.useEffect(() => {
     setData(initialData)
   }, [initialData])
@@ -283,7 +306,7 @@ export function DataTable({
     () => data?.map(({ id }) => id) || [],
     [data],
   )
-  const cols = columns(setRowData, setIsDialogOpenEdit, setIsDialogOpenDelete)
+  const cols = columns(setRowData, setIsDialogOpenDelete, setDetailData, setIsDialogOpenDetail)
 
   const table = useReactTable({
     data,
@@ -349,11 +372,11 @@ export function DataTable({
             <DropdownMenuContent align="end" className="w-56">
               {table
                 .getAllColumns()
-                .filter(
-                  column =>
-                    typeof column.accessorFn !== "undefined"
-                    && column.getCanHide(),
-                )
+                // .filter(
+                //   column =>
+                //     typeof column.accessorFn !== "undefined"
+                //     && column.getCanHide(),
+                // )
                 .map((column) => {
                   return (
                     <DropdownMenuCheckboxItem
@@ -369,27 +392,19 @@ export function DataTable({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm" onClick={() => setIsDialogOpenCreate(true)}>
-            <PlusIcon />
-            <span className="hidden lg:inline">Add Users</span>
-          </Button>
-          <PopUpDialog
-            isDialogOpen={isDialogOpenCreate}
-            setIsDialogOpen={setIsDialogOpenCreate}
-            forWhat="create"
-          />
-          <PopUpDialog
-            data={rowData}
-            isDialogOpen={isDialogOpenEdit}
-            setIsDialogOpen={setIsDialogOpenEdit}
-            forWhat="edit"
-          />
           <PopUpDialog
             data={rowData}
             isDialogOpen={isDialogOpenDelete}
             setIsDialogOpen={setIsDialogOpenDelete}
             forWhat="delete"
           />
+          {detailData && (
+            <ReplyDetailDialog
+              data={detailData}
+              isDialogOpen={isDialogOpenDetail}
+              setIsDialogOpen={setIsDialogOpenDetail}
+            />
+          )}
         </div>
       </div>
       <TabsContent
@@ -439,7 +454,7 @@ export function DataTable({
                       <TableRow>
                         <TableCell
                           colSpan={cols.length}
-                          className="h-24 text-center"
+                          className="h-24 text-center w-full"
                         >
                           No results.
                         </TableCell>
@@ -556,105 +571,17 @@ export function DataTable({
   )
 }
 
-function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
-  const { editUser, addUser, removeUser } = useUserStore()
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = React.useState(false)
-
-  const formik = useFormik({
-    enableReinitialize: true,
-    initialValues: {
-      fullName: data?.fullName || "",
-      nim: data?.nim || "",
-      faculty: data?.faculty || "",
-      phone: data?.phone || "",
-      email: data?.email || "",
-      newPassword: "",
-      newPasswordConfirmation: "",
-      username: data?.username || "",
-    },
-    validationSchema: Yup.object({
-      fullName: Yup.string().nullable(),
-      nim: Yup.string().nullable(),
-      faculty: Yup.string().nullable(),
-      phone: Yup.string().nullable(),
-      email: Yup.string().email("Invalid email format").nullable(),
-      newPassword: Yup.string().nullable(),
-      newPasswordConfirmation: Yup.string()
-        .oneOf([Yup.ref("newPassword"), undefined], "Passwords must match")
-        .nullable(),
-      username: Yup.string().nullable(),
-    }),
-    onSubmit: async (values, { setSubmitting }) => {
-      try {
-        const updatedFields = Object.entries(values).reduce((acc: any, [key, value]) => {
-          if (key === "newPassword" && value) {
-            acc.password = value
-          }
-          else if (
-            key !== "newPassword"
-            && key !== "newPasswordConfirmation"
-            && value !== formik.initialValues[key as keyof typeof formik.initialValues]
-          ) {
-            acc[key] = value
-          }
-          return acc
-        }, {})
-
-        if (Object.keys(updatedFields).length === 0) {
-          toast({
-            icon: <X className="size-6" />,
-            title: "No changes.",
-            description: "You haven't updated any fields.",
-          })
-          setSubmitting(false)
-          return
-        }
-
-        let response: any
-        if (forWhat === "create") {
-          response = await addUser(updatedFields)
-        }
-        else {
-          response = await editUser(data?.id, updatedFields)
-        }
-
-        if (response?.status === "success") {
-          toast({
-            icon: <Check className="size-6 text-green-600" />,
-            title: `${forWhat === "create" ? "Create" : "Update"} Success.`,
-            description: `User successfully ${forWhat === "create" ? "created" : "updated"}.`,
-          })
-          setIsDialogOpen(false)
-        }
-        else {
-          toast({
-            icon: <X className="size-6" />,
-            title: `${forWhat === "create" ? "Create" : "Update"} Failed.`,
-            description: response?.message?.detail || "Unknown error.",
-          })
-        }
-      }
-      catch (error) {
-        toast({
-          icon: <X className="size-6" />,
-          title: `${forWhat === "create" ? "Create" : "Update"} Failed.`,
-          description: error instanceof Error ? error.message : "Unexpected error occurred.",
-        })
-      }
-      finally {
-        setSubmitting(false)
-      }
-    },
-  })
+function PopUpDialog({ data, isDialogOpen, setIsDialogOpen }: any) {
+  const { removeReply } = useReplyStore()
 
   const handleDelete = async () => {
     try {
-      const response: any = await removeUser(data?.id)
+      const response: any = await removeReply(data?.id)
       if (response?.status === "success") {
         toast({
           icon: <Check className="size-6 text-green-600" />,
           title: "Delete Success.",
-          description: "User has been deleted.",
+          description: "Reply has been deleted.",
         })
         setIsDialogOpen(false)
       }
@@ -676,145 +603,109 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
   }
 
   return (
-    <>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          {forWhat === "delete"
-            ? (
-                <>
-                  <DialogHeader>
-                    <DialogTitle>Confirm Delete</DialogTitle>
-                    <p>
-                      Are you sure you want to delete user
-                      {" "}
-                      <b>{data?.fullName}</b>
-                      ?
-                    </p>
-                  </DialogHeader>
-                  <DialogFooter className="mt-4">
-                    <Button variant="destructive" onClick={handleDelete}>
-                      Yes, Delete
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                  </DialogFooter>
-                </>
-              )
-            : (
-                <>
-                  <DialogHeader className="pb-4 border-b border-gray-200 dark:border-gray-700">
-                    <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                      {forWhat === "create" ? "New User" : "Edit User"}
-                    </DialogTitle>
-                  </DialogHeader>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <p>
+            Are you sure you want to delete this reply:
+            <br />
+            <b>
+              {data?.filteredContent?.slice(0, 50)}
+              ...
+            </b>
+          </p>
+        </DialogHeader>
+        <DialogFooter className="mt-4">
+          <Button variant="destructive" onClick={handleDelete}>
+            Yes, Delete
+          </Button>
+          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            Cancel
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
-                  <form onSubmit={formik.handleSubmit} className="mt-6 max-h-[70vh] overflow-y-auto pr-2 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Input
-                        name="fullName"
-                        label="Full Name"
-                        value={formik.values.fullName}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.fullName && typeof formik.errors.fullName === "string" ? formik.errors.fullName : null}
-                        placeholder="Full Name"
-                        autoFocus
-                      />
-                      <Input
-                        name="email"
-                        label="Email"
-                        value={formik.values.email}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.email && typeof formik.errors.email === "string" ? formik.errors.email : null}
-                        placeholder="Email"
-                      />
-                      <Input
-                        name="newPassword"
-                        type="password"
-                        label="New Password"
-                        value={formik.values.newPassword}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.newPassword && typeof formik.errors.newPassword === "string" ? formik.errors.newPassword : null}
-                        placeholder="New Password"
-                      />
-                      <Input
-                        name="newPasswordConfirmation"
-                        type="password"
-                        label="Confirm New Password"
-                        value={formik.values.newPasswordConfirmation}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.newPasswordConfirmation && typeof formik.errors.newPasswordConfirmation === "string" ? formik.errors.newPasswordConfirmation : null}
-                        placeholder="Confirm New Password"
-                      />
-                      <Input
-                        name="username"
-                        label="Username"
-                        value={formik.values.username}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.username && typeof formik.errors.username === "string" ? formik.errors.username : null}
-                        placeholder="Username"
-                      />
-                      <Input
-                        name="nim"
-                        label="NIM (optional)"
-                        value={formik.values.nim}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.nim && typeof formik.errors.nim === "string" ? formik.errors.nim : null}
-                        placeholder="NIM"
-                      />
-                      <Input
-                        name="faculty"
-                        label="Faculty (optional)"
-                        value={formik.values.faculty}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.faculty && typeof formik.errors.faculty === "string" ? formik.errors.faculty : null}
-                        placeholder="Faculty"
-                      />
-                      <Input
-                        name="phone"
-                        label="Phone Number (optional)"
-                        value={formik.values.phone}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.phone && typeof formik.errors.phone === "string" ? formik.errors.phone : null}
-                        placeholder="Phone Number"
-                      />
-                    </div>
+function ReplyDetailDialog({
+  data,
+  isDialogOpen,
+  setIsDialogOpen,
+}: {
+  data: z.infer<typeof schema> | null
+  isDialogOpen: boolean
+  setIsDialogOpen: (open: boolean) => void
+}) {
+  if (!data)
+    return null
 
-                    <DialogFooter className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-slate-900">
-                      <Button
-                        type="button"
-                        className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-md transition-colors duration-200"
-                        onClick={() => setIsConfirmDialogOpen(true)}
-                        disabled={formik.isSubmitting}
-                      >
-                        {formik.isSubmitting ? "Saving..." : "Save Changes"}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </>
-              )}
-        </DialogContent>
-      </Dialog>
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogContent className="max-w-2xl rounded-lg bg-white dark:bg-slate-900 p-6 shadow-lg">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Reply Details
+          </DialogTitle>
+        </DialogHeader>
 
-      {forWhat !== "delete" && (
-        <ConfirmDialog
-          open={isConfirmDialogOpen}
-          type={forWhat === "create" ? "create" : "update"}
-          onConfirm={() => {
-            setIsConfirmDialogOpen(false)
-            formik.handleSubmit()
-          }}
-          onCancel={() => setIsConfirmDialogOpen(false)}
-        />
-      )}
-    </>
+        <div className="space-y-4 text-sm text-gray-700 dark:text-gray-300">
+          <div>
+            <span className="font-semibold">Username: </span>
+            {data.user.username}
+          </div>
+          <div>
+            <span className="font-semibold">Content:</span>
+            <p className="mt-1 whitespace-pre-line rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-200">
+              {data.content}
+            </p>
+          </div>
+          {data.filteredContent && (
+            <div>
+              <span className="font-semibold">Filtered Content:</span>
+              <p className="mt-1 whitespace-pre-line rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-200">
+                {data.filteredContent}
+              </p>
+            </div>
+          )}
+
+          <div>
+            <span className="font-semibold">Likes:</span>
+            {" "}
+            {data.likes.length}
+          </div>
+          <div>
+            <span className="font-semibold">Reports:</span>
+            {" "}
+            {data.reports.length}
+          </div>
+          <div>
+            <span className="font-semibold">Replies:</span>
+            {" "}
+            {data.replies.length}
+          </div>
+
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-4 space-y-1">
+            <div>
+              <span className="italic font-mono">Created At:</span>
+              {" "}
+              {toLocalDateTime(new Date(data.createdAt).toLocaleString())}
+            </div>
+            <div>
+              <span className="italic font-mono">Updated At:</span>
+              {" "}
+              {toLocalDateTime(new Date(data.updatedAt).toLocaleString())}
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="mt-6">
+          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

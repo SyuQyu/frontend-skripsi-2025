@@ -143,7 +143,7 @@ export default function Profile() {
         styleContent="!p-0 relative"
         styleDescription="text-base text-black text-center"
       >
-        <div className="w-full flex flex-col items-center relative mb-24">
+        <div className="w-full flex flex-col items-center relative sm:mb-24 mb-14">
           <div className="relative w-full rounded-lg overflow-hidden md:max-h-[200px] max-h-[150px]">
             <ImageWithFallback
               width={0}
@@ -183,124 +183,120 @@ export default function Profile() {
                     <Pencil className="w-5 h-5 text-black" />
                   </button>
                 </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Perbarui Data</DialogTitle>
+                <DialogContent className="max-w-2xl w-full p-6 rounded-lg bg-white dark:bg-slate-900 shadow-lg overflow-hidden">
+                  <DialogHeader className="pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                      Update Profile
+                    </DialogTitle>
                   </DialogHeader>
-                  <div className="py-4">
-                    <form onSubmit={formik.handleSubmit} className="w-full">
-                      <div className="w-full grid grid-cols-2 gap-4">
-                        <Input
-                          className="w-full"
-                          name="fullName"
-                          label="Full Name"
-                          value={formik.values.fullName}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.fullName && typeof formik.errors.fullName === "string" ? formik.errors.fullName : null}
-                          placeholder="Full Name"
-                        />
 
-                        <Input
-                          className="w-full"
-                          label="Email"
-                          name="email"
-                          value={formik.values.email}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.email && typeof formik.errors.email === "string" ? formik.errors.email : null}
-                          placeholder="Email"
-                        />
-                        <Input
-                          className="w-full"
-                          name="oldPassword"
-                          label="Old Password"
-                          type="password"
-                          value={formik.values.oldPassword}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.oldPassword && typeof formik.errors.oldPassword === "string" ? formik.errors.oldPassword : null}
-                          placeholder="Old Password"
-                        />
-                        <Input
-                          className="w-full"
-                          name="newPassword"
-                          type="password"
-                          label="New Password"
-                          value={formik.values.newPassword}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.newPassword && typeof formik.errors.newPassword === "string" ? formik.errors.newPassword : null}
-                          placeholder="New Password"
-                        />
-                        <Input
-                          className="w-full"
-                          name="newPasswordConfirmation"
-                          label="Confirm New Password"
-                          type="password"
-                          value={formik.values.newPasswordConfirmation}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.newPasswordConfirmation && typeof formik.errors.newPasswordConfirmation === "string" ? formik.errors.newPasswordConfirmation : null}
-                          placeholder="Confirm New Password"
-                        />
+                  <form
+                    onSubmit={formik.handleSubmit}
+                    className="mt-6 max-h-[70vh] overflow-y-auto pr-2 space-y-6"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Input Fields */}
+                      <Input
+                        className=""
+                        name="fullName"
+                        label="Full Name"
+                        value={formik.values.fullName}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.fullName && typeof formik.errors.fullName === "string" ? formik.errors.fullName : null}
+                        placeholder="Full Name"
+                        autoFocus
+                      />
+                      <Input
+                        name="email"
+                        label="Email"
+                        value={formik.values.email}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.email && typeof formik.errors.email === "string" ? formik.errors.email : null}
+                        placeholder="Email"
+                      />
+                      <Input
+                        name="oldPassword"
+                        label="Old Password"
+                        type="password"
+                        value={formik.values.oldPassword}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.oldPassword && typeof formik.errors.oldPassword === "string" ? formik.errors.oldPassword : null}
+                        placeholder="Old Password"
+                        autoComplete="current-password"
+                      />
+                      <Input
+                        name="newPassword"
+                        label="New Password"
+                        type="password"
+                        value={formik.values.newPassword}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.newPassword && typeof formik.errors.newPassword === "string" ? formik.errors.newPassword : null}
+                        placeholder="New Password"
+                        autoComplete="new-password"
+                      />
+                      <Input
+                        name="newPasswordConfirmation"
+                        label="Confirm New Password"
+                        type="password"
+                        value={formik.values.newPasswordConfirmation}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.newPasswordConfirmation && typeof formik.errors.newPasswordConfirmation === "string" ? formik.errors.newPasswordConfirmation : null}
+                        placeholder="Confirm New Password"
+                        autoComplete="new-password"
+                      />
+                      <Input
+                        name="username"
+                        label="Username"
+                        value={formik.values.username}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.username && typeof formik.errors.username === "string" ? formik.errors.username : null}
+                        placeholder="Username"
+                      />
+                      <Input
+                        name="nim"
+                        label="NIM (optional)"
+                        value={formik.values.nim}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.nim && typeof formik.errors.nim === "string" ? formik.errors.nim : null}
+                        placeholder="NIM"
+                      />
+                      <Input
+                        name="faculty"
+                        label="Faculty (optional)"
+                        value={formik.values.faculty}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.faculty && typeof formik.errors.faculty === "string" ? formik.errors.faculty : null}
+                        placeholder="Faculty"
+                      />
+                      <Input
+                        name="phone"
+                        label="Phone Number (optional)"
+                        value={formik.values.phone}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.phone && typeof formik.errors.phone === "string" ? formik.errors.phone : null}
+                        placeholder="Phone Number"
+                      />
+                    </div>
 
-                        <Input
-                          className="w-full"
-                          name="username"
-                          label="Username"
-                          value={formik.values.username}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.username && typeof formik.errors.username === "string" ? formik.errors.username : null}
-                          placeholder="Username"
-                        />
-
-                        <Input
-                          className="w-full"
-                          name="nim"
-                          label="NIM (optional)"
-                          value={formik.values.nim}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.nim && typeof formik.errors.nim === "string" ? formik.errors.nim : null}
-                          placeholder="NIM"
-                        />
-
-                        <Input
-                          className="w-full"
-                          label="Faculty (optional)"
-                          name="faculty"
-                          value={formik.values.faculty}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.faculty && typeof formik.errors.faculty === "string" ? formik.errors.faculty : null}
-                          placeholder="Faculty"
-                        />
-
-                        <Input
-                          className="w-full"
-                          name="phone"
-                          label="Phone Number (optional)"
-                          value={formik.values.phone}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.phone && typeof formik.errors.phone === "string" ? formik.errors.phone : null}
-                          placeholder="Phone Number"
-                        />
-                      </div>
-
-                      <DialogFooter>
-                        <Button
-                          className="bg-blue-500 text-white py-2 px-4 rounded-md"
-                          type="submit"
-                          disabled={formik.isSubmitting}
-                        >
-                          {formik.isSubmitting ? "Saving..." : "Save Changes"}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </div>
+                    <DialogFooter className="mt-6 sticky bottom-0 bg-white dark:bg-slate-900 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <Button
+                        className="bg-blue-600 text-white py-2 px-6 rounded-md"
+                        type="submit"
+                        disabled={formik.isSubmitting}
+                      >
+                        {formik.isSubmitting ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
                 </DialogContent>
               </Dialog>
             </div>

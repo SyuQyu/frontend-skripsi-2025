@@ -58,7 +58,7 @@ export default function Login() {
           title: "Login Success.",
         })
 
-        if (response?.data?.role === "Admin") {
+        if (response?.data?.role === "Admin" || response?.data?.role === "SuperAdmin") {
           router.push("/admin")
         }
         else {
@@ -96,7 +96,7 @@ export default function Login() {
         styleContent="!p-0"
         styleDescription="text-base text-black text-center"
       >
-        <form onSubmit={formik.handleSubmit} className="gap-8 flex flex-col">
+        <form onSubmit={formik.handleSubmit} className="sm:gap-8 gap-4 flex flex-col">
           <Input
             label="Username"
             type="text"
@@ -139,7 +139,7 @@ export default function Login() {
             >
               Sign in
             </Button>
-            <p>
+            <p className="text-center">
               Don’t have an account?
               <Link href="/register/posting-rules" className="text-custom-blue"> Create an account</Link>
             </p>

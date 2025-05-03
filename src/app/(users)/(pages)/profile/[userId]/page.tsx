@@ -27,7 +27,7 @@ export default function ProfileByUsername() {
         styleContent="!p-0 relative"
         styleDescription="text-base text-black text-center"
       >
-        <div className="w-full flex flex-col items-center relative mb-24">
+        <div className="w-full flex flex-col items-center relative sm:mb-24 mb-14">
           <div className="relative w-full rounded-lg overflow-hidden md:max-h-[200px] max-h-[150px]">
             <ImageWithFallback
               width={0}
