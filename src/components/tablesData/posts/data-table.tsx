@@ -119,6 +119,7 @@ export const schema = z.object({
   userId: z.string(),
   content: z.string(),
   filteredContent: z.string(),
+  durationFilteredContent: z.number(),
   postView: z.array(z.any()),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -196,6 +197,19 @@ function columns(
                 }
               }}
             />
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "Duration Filtered Content",
+      header: "Duration Filtered Content",
+      cell: ({ row }) => {
+        return (
+          <div className="text-left">
+            {(row.original.durationFilteredContent / 1000).toFixed(2)}
+            {" "}
+            seconds
           </div>
         )
       },
@@ -620,14 +634,12 @@ function PostDetailDialog({
               {data.content}
             </p>
           </div>
-          {data.filteredContent === data.content && (
-            <div>
-              <span className="font-semibold">Filtered Content:</span>
-              <p className="mt-1 whitespace-pre-line rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-200">
-                {data.filteredContent}
-              </p>
-            </div>
-          )}
+          <div>
+            <span className="font-semibold">Filtered Content:</span>
+            <p className="mt-1 whitespace-pre-line rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-200">
+              {data.filteredContent}
+            </p>
+          </div>
 
           {/* Tags */}
           <div>

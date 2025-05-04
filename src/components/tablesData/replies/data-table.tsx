@@ -122,6 +122,7 @@ export const schema = z.object({
   userId: z.string(),
   content: z.string(),
   filteredContent: z.string().nullable(),
+  durationFilteredContent: z.number(),
   postView: z.array(z.any()),
   replyView: z.array(z.any()), // <--- TAMBAHKAN INI
   createdAt: z.string(),
@@ -189,6 +190,19 @@ function columns(
       cell: ({ row }) => (
         <div className="text-left">{row.original.replyView?.length ?? 0}</div>
       ),
+    },
+    {
+      accessorKey: "Duration Filtered Content",
+      header: "Duration Filtered Content",
+      cell: ({ row }) => {
+        return (
+          <div className="text-left">
+            {(row.original.durationFilteredContent / 1000).toFixed(2)}
+            {" "}
+            seconds
+          </div>
+        )
+      },
     },
     {
       id: "likes",
@@ -661,14 +675,12 @@ function ReplyDetailDialog({
               {data.content}
             </p>
           </div>
-          {data.filteredContent && (
-            <div>
-              <span className="font-semibold">Filtered Content:</span>
-              <p className="mt-1 whitespace-pre-line rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-200">
-                {data.filteredContent}
-              </p>
-            </div>
-          )}
+          <div>
+            <span className="font-semibold">Filtered Content:</span>
+            <p className="mt-1 whitespace-pre-line rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-200">
+              {data.filteredContent}
+            </p>
+          </div>
 
           <div>
             <span className="font-semibold">Likes:</span>
