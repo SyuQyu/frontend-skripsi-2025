@@ -44,26 +44,38 @@ export default function Login() {
       setErrors({})
       setSuccessMessage(null)
       setErrorMessage(null)
-      const response = await login(values.username, values.password)
-      if (response.error) {
+      try {
+        const response = await login(values.username, values.password)
+        if (response.error) {
+          toast({
+            icon: (<X className="size-6" />),
+            title: "Login failed.",
+            description: response.message.detail,
+          })
+        }
+        else {
+          toast({
+            icon: (<Check className="size-6 text-green-600" />),
+            title: "Login Success.",
+          })
+
+          if (response?.data?.role === "Admin" || response?.data?.role === "SuperAdmin") {
+            router.push("/admin")
+          }
+          else {
+            router.push("/")
+          }
+        }
+      }
+      catch (error) {
+        // Tangani error unexpected
         toast({
           icon: (<X className="size-6" />),
           title: "Login failed.",
-          description: response.message.detail,
+          description: "Unexpected error occurred.",
         })
       }
-      else {
-        toast({
-          icon: (<Check className="size-6 text-green-600" />),
-          title: "Login Success.",
-        })
-
-        if (response?.data?.role === "Admin" || response?.data?.role === "SuperAdmin") {
-          router.push("/admin")
-        }
-        else {
-          router.push("/")
-        }
+      finally {
         setSubmitting(false)
       }
     },
