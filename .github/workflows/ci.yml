@@ -15,9 +15,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v2
         with:
-          node-version: 20.x
+          node-version: 22.x
       - run: yarn
-      - run: yarn run build --if-present
+      - run: yarn run build
