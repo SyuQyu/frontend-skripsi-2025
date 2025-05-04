@@ -19,16 +19,24 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
       - name: Install dependencies
         run: yarn
+
       - name: Build Next.js app
         run: yarn run build
+
       - name: Deploy using ssh
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOST }} # Isi secrets.HOST dengan 103.163.139.244
-          username: root # Karena Anda akses SSH sebagai root
-          key: ${{ secrets.PRIVATE_KEY }} # Isi private key Anda di secrets
+          host: ${{ secrets.HOST }}
+          username: root
+          key: ${{ secrets.PRIVATE_KEY }}
           port: 22
           script: |
             export NVM_DIR=~/.nvm
