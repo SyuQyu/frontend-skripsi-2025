@@ -39,8 +39,8 @@ export default function Agreement() {
           <p className="text-base text-black text-left leading-5">
             Welcome to
             {" "}
-            <Link passHref target="_blank" href="https://www.traumaandempathy.com" className="underline mx-1 text-custom-blue">
-              www.traumaandempathy.com,
+            <Link passHref target="_blank" href="https://anonchatku.space" className="underline mx-1 text-custom-blue">
+              anonchatku.space,
             </Link>
             Our platform encourages open and meaningful sharing of personal experiences. While your stories may cover a wide range of topics important to you, we ask that all contributions maintain respect and empathy for others.
           </p>
