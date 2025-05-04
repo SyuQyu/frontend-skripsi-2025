@@ -1,9 +1,10 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Check, Pencil, X } from "lucide-react"
 import { useFormik } from "formik"
 import * as Yup from "yup"
 import { useRouter } from "next/navigation"
+import debounce from "lodash.debounce"
 import { Button, Card, ImageWithFallback, Input, PostCard } from "@/components/common"
 import useAuthStore from "@/context/auth"
 import usePostStore from "@/context/post"
@@ -19,11 +20,48 @@ import useUserStore from "@/context/users"
 import { toast } from "@/components/ui/use-toast"
 
 export default function Profile() {
-  const { user, checkPassword } = useAuthStore()
+  const { user, checkPassword, checkEmail, checkUsername } = useAuthStore()
   const { fetchPostByUser, posts } = usePostStore()
   const { editUser } = useUserStore()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const router = useRouter()
+
+  const [usernameError, setUsernameError] = useState<string | null>(null)
+  const [emailError, setEmailError] = useState<string | null>(null)
+
+  // Debounced async check for username
+  const debouncedCheckUsername = useCallback(
+    debounce(async (username: string) => {
+      if (!username) {
+        setUsernameError(null)
+        return
+      }
+      const res = await checkUsername(username)
+      if (user?.username === username) {
+        setUsernameError(null)
+        return
+      }
+      setUsernameError(!res.data?.available ? "Username is already taken" : null)
+    }, 400),
+    [],
+  )
+
+  // Debounced async check for email
+  const debouncedCheckEmail = useCallback(
+    debounce(async (email: string) => {
+      if (!email) {
+        setEmailError(null)
+        return
+      }
+      const res = await checkEmail(email)
+      if (user?.email === email) {
+        setEmailError(null)
+        return
+      }
+      setEmailError(!res.data?.available ? "Email is already taken" : null)
+    }, 400),
+    [],
+  )
 
   const formik = useFormik({
     initialValues: {
@@ -50,7 +88,15 @@ export default function Profile() {
         .nullable(),
       username: Yup.string().nullable(),
     }),
-    onSubmit: async (values, { setSubmitting }) => {
+    onSubmit: async (values, { setSubmitting, setErrors }) => {
+      if (usernameError || emailError) {
+        setErrors({
+          username: usernameError || undefined,
+          email: emailError || undefined,
+        })
+        setSubmitting(false)
+        return
+      }
       try {
         const updatedFields = Object.entries(values).reduce((acc: any, [key, value]) => {
           if (key === "newPassword" && values.oldPassword && values.newPassword) {
@@ -211,9 +257,12 @@ export default function Profile() {
                         name="email"
                         label="Email"
                         value={formik.values.email}
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          formik.handleChange(e)
+                          debouncedCheckEmail(e.target.value)
+                        }}
                         onBlur={formik.handleBlur}
-                        error={formik.touched.email && typeof formik.errors.email === "string" ? formik.errors.email : null}
+                        error={emailError || (formik.touched.email && typeof formik.errors.email === "string" ? formik.errors.email : null)}
                         placeholder="Email"
                       />
                       <Input
@@ -253,9 +302,12 @@ export default function Profile() {
                         name="username"
                         label="Username"
                         value={formik.values.username}
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          formik.handleChange(e)
+                          debouncedCheckUsername(e.target.value)
+                        }}
                         onBlur={formik.handleBlur}
-                        error={formik.touched.username && typeof formik.errors.username === "string" ? formik.errors.username : null}
+                        error={usernameError || (formik.touched.username && typeof formik.errors.username === "string" ? formik.errors.username : null)}
                         placeholder="Username"
                       />
                       <Input

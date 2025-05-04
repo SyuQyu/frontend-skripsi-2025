@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 function PostCard({ post, detail, profile }: any) {
   const { addReply, removeReply, IncrementReplyView } = useReplyStore()
-  const { fetchPostById, removePost, fetchAllPosts, fetchPostByUser, IncrementPostView, checkWord } = usePostStore()
+  const { fetchPostById, removePost, fetchAllPosts, fetchPostByUser, IncrementPostView, checkWord, isLoading } = usePostStore()
   const { addLike, fetchLikesByParent } = useLikeStore()
   const { addReport } = useReportStore()
   const { user } = useAuthStore()

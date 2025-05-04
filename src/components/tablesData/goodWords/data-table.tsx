@@ -199,6 +199,10 @@ export function DataTable({
   const [isDialogOpenEdit, setIsDialogOpenEdit] = React.useState(false)
   const [isDialogOpenDelete, setIsDialogOpenDelete] = React.useState(false)
   const [rowData, setRowData] = React.useState<any>(null)
+  const [isBulkDialogOpen, setIsBulkDialogOpen] = React.useState(false)
+  const { bulkCreateGoodWordsFromFile, fetchAllGoodWords } = useGoodWordStore()
+  const [file, setFile] = React.useState<File | null>(null)
+  const [isUploading, setIsUploading] = React.useState(false)
   React.useEffect(() => {
     setData(initialData)
   }, [initialData])
@@ -262,6 +266,47 @@ export function DataTable({
     }
   }
 
+  const handleBulkUpload = async () => {
+    if (!file) {
+      toast({
+        title: "No file selected",
+        description: "Please choose a file to upload.",
+        variant: "destructive",
+      })
+      return
+    }
+    setIsUploading(true)
+    try {
+      const res: any = await bulkCreateGoodWordsFromFile(file)
+      if (res?.status === "success") {
+        toast({
+          title: "Upload success",
+          description: res.message || "Good words uploaded successfully.",
+        })
+        setIsBulkDialogOpen(false)
+        setFile(null)
+        await fetchAllGoodWords() // refresh data
+      }
+      else {
+        toast({
+          title: "Upload failed",
+          description: res?.message || "Error uploading file.",
+          variant: "destructive",
+        })
+      }
+    }
+    catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Error uploading file.",
+        variant: "destructive",
+      })
+    }
+    finally {
+      setIsUploading(false)
+    }
+  }
+
   return (
     <Tabs
       defaultValue="outline"
@@ -314,6 +359,59 @@ export function DataTable({
             <PlusIcon />
             <span className="hidden lg:inline">Add Good Words</span>
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsBulkDialogOpen(true)}
+          >
+            <PlusIcon />
+            <span className="hidden lg:inline">Bulk Upload</span>
+          </Button>
+
+          <Dialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Bulk Upload Good Words</DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col gap-4 mt-4">
+                <input
+                  type="file"
+                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      setFile(e.target.files[0])
+                    }
+                    else {
+                      setFile(null)
+                    }
+                  }}
+                />
+                {file && (
+                  <p>
+                    Selected file:
+                    {file.name}
+                  </p>
+                )}
+                <Button
+                  onClick={handleBulkUpload}
+                  disabled={isUploading || !file}
+                  className="w-full"
+                >
+                  {isUploading ? "Uploading..." : "Upload"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setFile(null)
+                    setIsBulkDialogOpen(false)
+                  }}
+                  className="w-full"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           <PopUpDialog
             isDialogOpen={isDialogOpenCreate}
             setIsDialogOpen={setIsDialogOpenCreate}

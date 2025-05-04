@@ -1,9 +1,10 @@
 "use client"
-import React, { useState } from "react"
+import React, { useCallback, useState } from "react"
 import { useFormik } from "formik"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Mail, X } from "lucide-react"
+import debounce from "lodash.debounce"
 import { Button, Card, Input, StrengthBarPassword } from "@/components/common"
 import { getPasswordStrength } from "@/lib/utils"
 import useRegisterStep from "@/context/registerStep"
@@ -51,7 +52,7 @@ function validate(values: FormValues) {
 export default function Form() {
   const router = useRouter()
   const { completeStep, canAccessStep } = useRegisterStep()
-  const { register } = useAuthStore()
+  const { register, checkUsername, checkEmail } = useAuthStore()
   const { toast } = useToast()
 
   if (!canAccessStep("step2")) {
@@ -59,7 +60,34 @@ export default function Form() {
   }
 
   const [passwordStrength, setPasswordStrength] = useState(0)
+  const [usernameError, setUsernameError] = useState<string | null>(null)
   const [emailError, setEmailError] = useState<string | null>(null)
+
+  // Debounced async check for username
+  const debouncedCheckUsername = useCallback(
+    debounce(async (username: string) => {
+      if (!username) {
+        setUsernameError(null)
+        return
+      }
+      const res = await checkUsername(username)
+      setUsernameError(!res.data?.available ? "Username is already taken" : null)
+    }, 400),
+    [],
+  )
+
+  // Debounced async check for email
+  const debouncedCheckEmail = useCallback(
+    debounce(async (email: string) => {
+      if (!email) {
+        setEmailError(null)
+        return
+      }
+      const res = await checkEmail(email)
+      setEmailError(!res.data?.available ? "Email is already taken" : null)
+    }, 400),
+    [],
+  )
 
   const formik = useFormik({
     initialValues: {
@@ -69,8 +97,17 @@ export default function Form() {
       confirmPassword: "",
     },
     validate,
-    onSubmit: async (values, { setSubmitting }) => {
-      setEmailError(null)
+    onSubmit: async (values, { setSubmitting, setErrors }) => {
+      // Berhentikan submit kalau sudah ada error async username/email
+      if (usernameError || emailError) {
+        setErrors({
+          username: usernameError || undefined,
+          email: emailError || undefined,
+        })
+        setSubmitting(false)
+        return
+      }
+
       const response = await register(values.username, values.email, values.password, values.confirmPassword)
 
       if (response.error) {
@@ -79,19 +116,18 @@ export default function Form() {
           title: "Registration failed.",
           description: response.message?.email?.[0] || "An unexpected error occurred. Please try again later.",
         })
+        setSubmitting(false)
       }
       else {
         completeStep("step3")
         toast({
           icon: (<Mail className="size-6" />),
-          title: "Code sent.",
-          description: "Please check your email or spam folder for the code. Thanks for your patience.",
+          title: "Registration success.",
+          description: "Thank you for registering with us.",
         })
         setTimeout(() => {
-          // router.push("/register/verification-account")
           router.push("/login")
         }, 400)
-
         setSubmitting(false)
       }
     },
@@ -124,16 +160,22 @@ export default function Form() {
             label="Username"
             type="text"
             name="username"
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              formik.handleChange(e)
+              debouncedCheckUsername(e.target.value)
+            }}
             onBlur={formik.handleBlur}
             value={formik.values.username}
-            error={formik.touched.username && formik.errors.username ? formik.errors.username : null}
+            error={usernameError || (formik.touched.username && formik.errors.username ? formik.errors.username : null)}
           />
           <Input
             label="Email"
             type="email"
             name="email"
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              formik.handleChange(e)
+              debouncedCheckEmail(e.target.value)
+            }}
             onBlur={formik.handleBlur}
             value={formik.values.email}
             error={emailError || (formik.touched.email && formik.errors.email ? formik.errors.email : null)}

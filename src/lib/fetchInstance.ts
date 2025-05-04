@@ -11,9 +11,20 @@ export async function fetchInstance(url: string, options: FetchOptions = {}) {
   const token = getAccessToken() // Retrieve token from cookies
 
   const headers: HeadersInit = {
-    "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...fetchOptions.headers,
+  }
+
+  // Jika body bukan FormData, baru tambahkan Content-Type: application/json
+  if (!(fetchOptions.body instanceof FormData)) {
+    (headers as Record<string, string>)["Content-Type"] = "application/json"
+  } else {
+    // pastikan kalau ada, hapus 'Content-Type'
+    // headers.delete("Content-Type") hanya untuk Headers objek,  
+    // jadi di sini kita override supaya tidak ada Content-Type
+    if ("Content-Type" in headers) {
+      delete headers["Content-Type"]
+    }
   }
 
   for (let attempt = 0; attempt <= retries; attempt++) {

@@ -57,6 +57,7 @@ import { z } from "zod"
 
 import { useFormik } from "formik"
 import * as Yup from "yup"
+import debounce from "lodash.debounce"
 import { toast } from "@/components/ui/use-toast"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
@@ -113,6 +114,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import useUserStore from "@/context/users"
 import { toLocalDateTime } from "@/lib/utils"
+import useAuthStore from "@/context/auth"
 
 export const schema = z.object({
   id: z.string(),
@@ -558,7 +560,44 @@ export function DataTable({
 
 function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
   const { editUser, addUser, removeUser } = useUserStore()
+  const { checkUsername, checkEmail } = useAuthStore()
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = React.useState(false)
+  const [usernameError, setUsernameError] = React.useState<string | null>(null)
+  const [emailError, setEmailError] = React.useState<string | null>(null)
+
+  // Debounced async check for username
+  const debouncedCheckUsername = React.useCallback(
+    debounce(async (username: string) => {
+      if (!username) {
+        setUsernameError(null)
+        return
+      }
+      const res = await checkUsername(username)
+      if (data?.username === username) {
+        setUsernameError(null)
+        return
+      }
+      setUsernameError(!res.data?.available ? "Username is already taken" : null)
+    }, 400),
+    [],
+  )
+
+  // Debounced async check for email
+  const debouncedCheckEmail = React.useCallback(
+    debounce(async (email: string) => {
+      if (!email) {
+        setEmailError(null)
+        return
+      }
+      const res = await checkEmail(email)
+      if (data?.email === email) {
+        setEmailError(null)
+        return
+      }
+      setEmailError(!res.data?.available ? "Email is already taken" : null)
+    }, 400),
+    [],
+  )
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -584,7 +623,15 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
         .nullable(),
       username: Yup.string().nullable(),
     }),
-    onSubmit: async (values, { setSubmitting }) => {
+    onSubmit: async (values, { setSubmitting, setErrors }) => {
+      if (usernameError || emailError) {
+        setErrors({
+          username: usernameError || undefined,
+          email: emailError || undefined,
+        })
+        setSubmitting(false)
+        return
+      }
       try {
         const updatedFields = Object.entries(values).reduce((acc: any, [key, value]) => {
           if (key === "newPassword" && value) {
@@ -725,9 +772,12 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
                         name="email"
                         label="Email"
                         value={formik.values.email}
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          formik.handleChange(e)
+                          debouncedCheckEmail(e.target.value)
+                        }}
                         onBlur={formik.handleBlur}
-                        error={formik.touched.email && typeof formik.errors.email === "string" ? formik.errors.email : null}
+                        error={emailError || (formik.touched.email && typeof formik.errors.email === "string" ? formik.errors.email : null)}
                         placeholder="Email"
                       />
                       <Input
@@ -754,9 +804,12 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
                         name="username"
                         label="Username"
                         value={formik.values.username}
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          formik.handleChange(e)
+                          debouncedCheckUsername(e.target.value)
+                        }}
                         onBlur={formik.handleBlur}
-                        error={formik.touched.username && typeof formik.errors.username === "string" ? formik.errors.username : null}
+                        error={usernameError || (formik.touched.username && typeof formik.errors.username === "string" ? formik.errors.username : null)}
                         placeholder="Username"
                       />
                       <Input

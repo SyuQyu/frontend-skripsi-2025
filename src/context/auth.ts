@@ -1,7 +1,9 @@
 import { create } from "zustand"
 import Cookies from "js-cookie"
 import {
+  checkEmail,
   checkPassword,
+  checkUsername,
   getLoggedInUserData,
   login,
   logout,
@@ -37,6 +39,8 @@ interface AuthState {
   refreshToken: (refresh: string) => Promise<void>
   getLoggedInUser: () => any
   checkPassword: (userId: string, password: string) => Promise<any>
+  checkUsername: (username: string) => Promise<AuthResponse>
+  checkEmail: (email: string) => Promise<AuthResponse>
 }
 
 const useAuthStore = create<AuthState>((set, get) => ({
@@ -47,7 +51,31 @@ const useAuthStore = create<AuthState>((set, get) => ({
   codeVerificationPassword: "",
 
   setCodeVerificationPassword: code => set({ codeVerificationPassword: code }),
+  checkUsername: async (username) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await checkUsername(username)
+      set({ isLoading: false })
+      return { data: response, error: false }
+    }
+    catch (error: any) {
+      set({ error: error.response?.data || "Username check failed", isLoading: false })
+      return { error: true, message: error.response?.data || "Username check failed" }
+    }
+  },
 
+  checkEmail: async (email) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await checkEmail(email)
+      set({ isLoading: false })
+      return { data: response, error: false }
+    }
+    catch (error: any) {
+      set({ error: error.response?.data || "Email check failed", isLoading: false })
+      return { error: true, message: error.response?.data || "Email check failed" }
+    }
+  },
   getLoggedInUser: async () => {
     set({ isLoading: true, error: null })
     try {

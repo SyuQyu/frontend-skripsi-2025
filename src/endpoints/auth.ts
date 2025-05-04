@@ -73,3 +73,17 @@ export function resetPassword(userId: string, password: string) {
     body: JSON.stringify({ userId, password }),
   })
 }
+
+export function checkUsername(username: string) {
+  return fetchInstance("/auth/check-username", {
+    method: "POST",
+    body: JSON.stringify({ username }),
+  })
+}
+
+export function checkEmail(email: string) {
+  return fetchInstance("/auth/check-email", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  })
+}

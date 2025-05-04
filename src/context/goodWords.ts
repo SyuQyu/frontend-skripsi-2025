@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import {
+  bulkCreateGoodWords,
   createGoodWord,
   deleteGoodWord,
   getAllGoodWords,
@@ -22,6 +23,7 @@ interface GoodWordState {
   addGoodWord: (payload: GoodWordPayload) => Promise<void>
   editGoodWord: (goodWordId: string, payload: GoodWordPayload) => Promise<void>
   removeGoodWord: (goodWordId: string) => Promise<void>
+  bulkCreateGoodWordsFromFile: (file: File) => Promise<void>
 }
 
 const useGoodWordStore = create<GoodWordState>((set, get) => ({
@@ -38,6 +40,19 @@ const useGoodWordStore = create<GoodWordState>((set, get) => ({
     }
     catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to fetch good words", isLoading: false })
+    }
+  },
+  // Fungsi bulk upload file
+  bulkCreateGoodWordsFromFile: async (file: File) => {
+    set({ isLoading: true, error: null })
+    try {
+      const res = await bulkCreateGoodWords(file)
+      await get().fetchAllGoodWords()
+      set({ isLoading: false })
+      return res
+    }
+    catch (error: any) {
+      set({ error: error.response?.data?.message || "Failed to upload bulk good words", isLoading: false })
     }
   },
 
@@ -69,7 +84,6 @@ const useGoodWordStore = create<GoodWordState>((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const res = await updateGoodWord(goodWordId, payload)
-      console.log("res", res, payload)
       await get().fetchAllGoodWords()
       set({ isLoading: false })
       return res

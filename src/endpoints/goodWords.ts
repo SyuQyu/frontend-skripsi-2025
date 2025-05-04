@@ -37,3 +37,14 @@ export function deleteGoodWord(goodWordId: string) {
     method: "DELETE",
   })
 }
+
+export function bulkCreateGoodWords(file: File) {
+  const formData = new FormData()
+  formData.append("file", file)
+
+  return fetchInstance("/goodwords/bluk/create", {
+    method: "POST",
+    body: formData,
+    // jangan set headers: { "Content-Type": "application/json" } atau apapun di sini!
+  })
+}
