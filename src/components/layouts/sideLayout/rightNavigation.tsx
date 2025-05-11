@@ -71,45 +71,49 @@ export default function Header() {
             className={`py-2 px-4 ${activeTab === "people" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-500"}`}
             onClick={() => setActiveTab("people")}
           >
-            By People
+            Top Post
           </button>
         </div>
 
         {/* Selected item display and dropdown toggle */}
-        <div className="relative">
-          <button
-            onClick={() => setIsDropdownOpen(prev => !prev)}
-            className="w-full p-2 mb-4 border rounded-lg border-gray-300 text-left"
-          >
-            {selectedOption ? selectedOption.label : "Search"}
-          </button>
+        {
+          activeTab === "tags" && (
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(prev => !prev)}
+                className="w-full p-2 mb-4 border rounded-lg border-gray-300 text-left"
+              >
+                {selectedOption ? selectedOption.label : "Search"}
+              </button>
 
-          {/* Dropdown list */}
-          {isDropdownOpen && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
-              {/* Search input */}
-              <input
-                type="text"
-                placeholder="Search"
-                value={searchTerm}
-                onChange={handleSearch}
-                className="w-full p-2 border-b border-gray-300 rounded-t-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {/* Options list */}
-              <ul className="max-h-60 overflow-y-auto">
-                {filteredOptions.map(option => (
-                  <li
-                    key={option.value}
-                    onClick={() => handleOptionClick(option)}
-                    className={`p-2 cursor-pointer hover:bg-blue-50 ${selectedOption === option ? "bg-blue-100" : ""}`}
-                  >
-                    {option.label}
-                  </li>
-                ))}
-              </ul>
+              {/* Dropdown list */}
+              {isDropdownOpen && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                  {/* Search input */}
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="w-full p-2 border-b border-gray-300 rounded-t-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {/* Options list */}
+                  <ul className="max-h-60 overflow-y-auto">
+                    {filteredOptions.map(option => (
+                      <li
+                        key={option.value}
+                        onClick={() => handleOptionClick(option)}
+                        className={`p-2 cursor-pointer hover:bg-blue-50 ${selectedOption === option ? "bg-blue-100" : ""}`}
+                      >
+                        {option.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          )
+        }
       </div>
     </div>
   )

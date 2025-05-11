@@ -18,8 +18,8 @@ interface UserState {
   error: string | null
   fetchAllUsers: () => Promise<void>
   fetchUserById: (id: string) => Promise<void>
-  addUser: (user: CreateUserInput) => Promise<void>
-  editUser: (id: string, data: Partial<CreateUserInput>) => Promise<void>
+  addUser: (user: CreateUserInput, profilePicture?: File, backgroundPicture?: File) => Promise<void>
+  editUser: (id: string, data: Partial<CreateUserInput>, profilePicture?: File, backgroundPicture?: File) => Promise<void>
   removeUser: (id: string) => Promise<void>
   clearSelectedUser: () => void
 }
@@ -49,7 +49,7 @@ const useUserStore = create<UserState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const response = await getUserById(id)
-      set({ selectedUser: response.users, isLoading: false })
+      set({ selectedUser: response.user, isLoading: false })
     }
     catch (error: any) {
       set({
@@ -59,10 +59,10 @@ const useUserStore = create<UserState>(set => ({
     }
   },
 
-  addUser: async (user: CreateUserInput) => {
+  addUser: async (user: CreateUserInput, profilePicture?: File, backgroundPicture?: File) => {
     set({ isLoading: true, error: null })
     try {
-      const res = await createUser(user)
+      const res = await createUser(user, profilePicture, backgroundPicture)
       await useUserStore.getState().fetchAllUsers()
       set({ isLoading: false })
       return res
@@ -75,10 +75,10 @@ const useUserStore = create<UserState>(set => ({
     }
   },
 
-  editUser: async (id: string, data: Partial<CreateUserInput>) => {
+  editUser: async (id: string, data: Partial<CreateUserInput>, profilePicture?: File, backgroundPicture?: File) => {
     set({ isLoading: true, error: null })
     try {
-      const res = await updateUser(id, data)
+      const res = await updateUser(id, data, profilePicture, backgroundPicture)
       await useUserStore.getState().fetchAllUsers()
       await useAuthStore.getState().logout()
       set({ isLoading: false })

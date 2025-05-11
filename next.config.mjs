@@ -11,6 +11,12 @@ const nextConfig = {
     NEXT_PUBLIC_API: process.env.NEXT_PUBLIC_API,
     NEXT_PUBLIC_FRONTEND: process.env.NEXT_PUBLIC_FRONTEND,
   },
+  images: {
+    domains: [
+      "localhost",
+      "anonchatku.space",
+    ],
+  },
 }
 
 export default nextConfig

@@ -18,12 +18,14 @@ export async function fetchInstance(url: string, options: FetchOptions = {}) {
   // Jika body bukan FormData, baru tambahkan Content-Type: application/json
   if (!(fetchOptions.body instanceof FormData)) {
     (headers as Record<string, string>)["Content-Type"] = "application/json"
-  } else {
+  }
+  else {
     // pastikan kalau ada, hapus 'Content-Type'
-    // headers.delete("Content-Type") hanya untuk Headers objek,  
+    // headers.delete("Content-Type") hanya untuk Headers objek,
     // jadi di sini kita override supaya tidak ada Content-Type
     if ("Content-Type" in headers) {
       delete headers["Content-Type"]
+      delete headers["content-type"]
     }
   }
 
