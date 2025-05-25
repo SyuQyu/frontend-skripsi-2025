@@ -16,7 +16,7 @@ import useReportStore from "@/context/reports"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-function PostCard({ post, detail, profile }: any) {
+function PostCard({ post, detail, profile, params }: any) {
   const { addReply, removeReply, IncrementReplyView } = useReplyStore()
   const { fetchPostById, removePost, fetchAllPosts, fetchPostByUser, IncrementPostView, checkWord, isLoading } = usePostStore()
   const { addLike, fetchLikesByParent } = useLikeStore()
@@ -51,6 +51,9 @@ function PostCard({ post, detail, profile }: any) {
     if (!profile) {
       fetchPostById(post?.id)
       fetchAllPosts()
+    }
+    else if (params) {
+      fetchPostByUser(params)
     }
     else {
       fetchPostByUser(user?.id)

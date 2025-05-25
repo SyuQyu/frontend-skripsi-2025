@@ -73,7 +73,7 @@ export default function ProfileByUsername() {
           {
             posts.length > 0
               ? posts.map((post, idx) => (
-                  <PostCard key={idx} post={post} profile={true} />
+                  <PostCard key={idx} post={post} profile={true} params={params.userId} />
                 ))
               : (
                   <p className="text-center text-gray-500">No posts available</p>
