@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import clsx from "clsx"
 import { usePathname, useRouter } from "next/navigation"
@@ -130,25 +130,26 @@ export default function Header() {
             </div>
             <div className="flex flex-row justify-start items-center gap-3 mt-auto w-full pt-4">
               <div className="flex flex-col gap-6 justify-start items-start mt-4 ml-2">
-                {bottomMenuItems.map(({ icon: Icon, label, path }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => handleMenuClick(path)}
-                    className={clsx(
-                      "flex flex-row justify-start items-center gap-3 group font-normal text-base",
-                      { "text-blue-500": activePath === path, "text-inherit": activePath !== path },
-                    )}
-                  >
-                    <Icon
-                      className={clsx("h-6 w-6 text-3xl transition-colors duration-200", {
-                        "text-blue-500": activePath === path,
-                        "group-hover:text-blue-500": activePath !== path,
+                {bottomMenuItems.length > 0 && (
+                  bottomMenuItems.map(({ icon, label, path }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => handleMenuClick(path)}
+                      className={clsx(
+                        "flex flex-row justify-start items-center gap-3 group font-normal text-base",
+                        { "text-blue-500": activePath === path, "text-inherit": activePath !== path },
+                      )}
+                    >
+                      {React.createElement(icon, {
+                        className: clsx("h-6 w-6 text-3xl transition-colors duration-200", {
+                          "text-blue-500": activePath === path,
+                          "group-hover:text-blue-500": activePath !== path,
+                        }),
                       })}
-                    />
-                    <p className="group-hover:text-blue-500">{label}</p>
-                  </button>
-                ))}
+                      <p className="group-hover:text-blue-500">{label}</p>
+                    </button>
+                  )))}
                 <Button
                   variant="ghost"
                   type="button"
