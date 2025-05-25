@@ -7,5 +7,5 @@ export const menuItems = [
 ]
 
 export const bottomMenuItems = [
-  { icon: Mail, label: "Contact", path: "/contact-us" },
+  // { icon: Mail, label: "Contact", path: "/contact-us" },
 ]

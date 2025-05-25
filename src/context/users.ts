@@ -1,6 +1,7 @@
 // stores/useUserStore.ts
 
 import { create } from "zustand"
+import Cookies from "js-cookie"
 import {
   CreateUserInput,
   createUser,
@@ -79,8 +80,9 @@ const useUserStore = create<UserState>(set => ({
     set({ isLoading: true, error: null })
     try {
       const res = await updateUser(id, data, profilePicture, backgroundPicture)
-      await useUserStore.getState().fetchAllUsers()
-      await useAuthStore.getState().logout()
+      Cookies.set("access_token", res.accessToken, { expires: 1 })
+      Cookies.set("refresh_token", res.refreshToken, { expires: 7 })
+      await useAuthStore.getState().getLoggedInUser()
       set({ isLoading: false })
       return res
     }

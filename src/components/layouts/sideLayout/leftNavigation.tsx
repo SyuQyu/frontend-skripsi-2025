@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import clsx from "clsx"
 import Link from "next/link"
@@ -95,21 +95,23 @@ export default function Header() {
         </div>
         <div className="flex flex-row justify-start items-center gap-3 mt-auto w-full pt-4">
           <div className="flex flex-col gap-6 justify-start items-start mt-4 ml-2">
-            {bottomMenuItems.map(({ icon: Icon, label, path }) => (
-              <Link
-                key={label}
-                href={path}
-                className="flex flex-row justify-start items-center gap-3 group"
-              >
-                <Icon
-                  className={clsx("h-6 w-6 text-3xl transition-colors duration-200", {
-                    "text-blue-500": activePath === path,
-                    "group-hover:text-blue-500": activePath !== path,
+            {bottomMenuItems.length > 0 && (
+              bottomMenuItems.map(({ icon, label, path }) => (
+                <Link
+                  key={label}
+                  href={path}
+                  className="flex flex-row justify-start items-center gap-3 group"
+                >
+                  {React.createElement(icon, {
+                    className: clsx("h-6 w-6 text-3xl transition-colors duration-200", {
+                      "text-blue-500": activePath === path,
+                      "group-hover:text-blue-500": activePath !== path,
+                    }),
                   })}
-                />
-                <p className="font-normal text-base group-hover:text-blue-500">{label}</p>
-              </Link>
-            ))}
+                  <p className="font-normal text-base group-hover:text-blue-500">{label}</p>
+                </Link>
+              ))
+            )}
 
             <Button
               variant="ghost"

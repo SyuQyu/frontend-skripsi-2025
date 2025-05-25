@@ -76,6 +76,11 @@ const data = {
       url: "/good-bad-words",
       icon: UsersIcon,
     },
+    {
+      title: "Common Words",
+      url: "/common-words",
+      icon: UsersIcon,
+    },
   ],
   navClouds: [
     {

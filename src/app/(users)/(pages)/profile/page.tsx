@@ -134,11 +134,11 @@ export default function Profile() {
         if (response?.status === "success") {
           toast({
             icon: <Check className="size-6 text-green-600" />,
-            title: "Update Success, Logging out.",
+            title: "Update Success.",
             description: "You have successfully updated your profile.",
           })
           setIsDialogOpen(false)
-          router.push("/login")
+          // router.push("/login")
         }
         else {
           toast({
@@ -167,6 +167,22 @@ export default function Profile() {
     }
     fetchData()
   }, [fetchPostByUser, user?.id])
+
+  useEffect(() => {
+    if (user) {
+      formik.setValues({
+        fullName: user.fullName || "",
+        nim: user.nim || "",
+        faculty: user.faculty || "",
+        phone: user.phone || "",
+        email: user.email || "",
+        oldPassword: "",
+        newPassword: "",
+        newPasswordConfirmation: "",
+        username: user.username || "",
+      })
+    }
+  }, [user])
 
   useEffect(() => {
     if (formik.values.oldPassword) {
@@ -394,7 +410,7 @@ export default function Profile() {
                           error={usernameError || (formik.touched.username && typeof formik.errors.username === "string" ? formik.errors.username : null)}
                           placeholder="Username"
                         />
-                        <Input
+                        {/* <Input
                           name="nim"
                           label="NIM (optional)"
                           value={formik.values.nim}
@@ -411,7 +427,7 @@ export default function Profile() {
                           onBlur={formik.handleBlur}
                           error={formik.touched.faculty && typeof formik.errors.faculty === "string" ? formik.errors.faculty : null}
                           placeholder="Faculty"
-                        />
+                        /> */}
                         <Input
                           name="phone"
                           label="Phone Number (optional)"

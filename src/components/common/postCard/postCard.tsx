@@ -339,7 +339,7 @@ function PostCard({ post, detail, profile }: any) {
                 {user?.id === reply?.user.id && (
                   <Button className="text-sm text-gray-700 hover:text-gray-900 !border-none" onClick={() => handleDeleteClick("reply", reply?.id)}>
                     <Trash className="size-5 text-blue-500 mr-1" />
-                    delete
+                    Delete
                   </Button>
                 )}
               </div>
@@ -539,7 +539,7 @@ function PostCard({ post, detail, profile }: any) {
               {user?.id === post?.user.id && (
                 <Button className="text-sm text-gray-700 hover:text-gray-900 !border-none" onClick={() => handleDeleteClick("post")}>
                   <Trash className="size-5 text-blue-500 mr-1" />
-                  delete
+                  Delete
                 </Button>
               )}
             </div>

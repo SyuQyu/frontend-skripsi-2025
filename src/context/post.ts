@@ -11,6 +11,7 @@ import {
   getPostByUser,
   updatePost,
 } from "@/endpoints/post"
+import useTagStore from "./tags"
 
 interface PostPayload {
   content: string
@@ -123,6 +124,7 @@ const usePostStore = create<PostState>((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       await createPost(payload)
+      await useTagStore.getState().fetchAllTags() // Refresh tags after creating a post
       set({ isLoading: false })
     }
     catch (error: any) {
