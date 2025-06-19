@@ -13,8 +13,12 @@ export function createBadWord(payload: BadWordPayload) {
 }
 
 // Get all bad words
-export function getAllBadWords() {
-  return fetchInstance("/badwords/all")
+export function getAllBadWords(page: number = 1, limit: number = 10) {
+  return fetchInstance(`/badwords/all?page=${page}&limit=${limit}`)
+}
+
+export function getAllBadWordsWithoutPagination() {
+  return fetchInstance("/badwords/all-without-pagination")
 }
 
 // Get bad word by ID
@@ -40,4 +44,8 @@ export function deleteBadWord(badWordId: string) {
 // Check if a word is a bad word
 export function checkBadWord(word: string) {
   return fetchInstance(`/badwords/check/${encodeURIComponent(word)}`)
+}
+
+export function checkBadWordNotExact(word: string, page: number = 1, limit: number = 10) {
+  return fetchInstance(`/badwords/check-not-exact/${encodeURIComponent(word)}?page=${page}&limit=${limit}`)
 }

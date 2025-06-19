@@ -36,7 +36,9 @@ import {
 import {
   Check,
   ChevronDownIcon,
+  ChevronLeft,
   ChevronLeftIcon,
+  ChevronRight,
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
@@ -44,6 +46,7 @@ import {
   MoreVerticalIcon,
   Pencil,
   PlusIcon,
+  Search,
   Trash2,
   X,
 } from "lucide-react"
@@ -600,7 +603,11 @@ export function DataTable({
 
 function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }: any) {
   const { addGoodWord, editGoodWord, removeGoodWord } = useGoodWordStore()
-  const { addBadWord, editBadWord, removeBadWord } = useBadWordStore()
+  const { addBadWord, editBadWord, removeBadWord, fetchAllBadWords, checkIfBadWordNotExact, checkIfBadWord } = useBadWordStore()
+
+  const [page, setPage] = React.useState(1)
+  const [limit, setLimit] = React.useState(10)
+  const [totalPages, setTotalPages] = React.useState(1)
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const [newBadWord, setNewBadWord] = React.useState("")
@@ -608,26 +615,74 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
   const [editingBadWordId, setEditingBadWordId] = React.useState<string | null>(null)
   const [editingBadWordText, setEditingBadWordText] = React.useState("")
   const [search, setSearch] = React.useState("")
+  const [badWordsLookup, setBadWordsLookup] = React.useState([])
+  const [searchTimeout, setSearchTimeout] = React.useState<NodeJS.Timeout | null>(null)
+  const [isLoading, setIsLoading] = React.useState(false)
 
-  const badWordsLookup = React.useMemo(
-    () => badWords.map((badWord: any) => ({
-      label: badWord.word,
-      value: badWord.id,
-    })),
-    [badWords],
-  )
+  // Fetch data function
+  const fetchData = React.useCallback(async () => {
+    setIsLoading(true)
+    try {
+      let result
+      if (search.trim() !== "") {
+        // Search with pagination
+        result = await checkIfBadWordNotExact(search.trim(), page, limit)
+      }
+      else {
+        // Normal list with pagination
+        result = await fetchAllBadWords(page, limit)
+      }
 
-  const filteredBadWords = React.useMemo(
-    () =>
-      badWordsLookup.filter((item: any) =>
-        item.label.toLowerCase().includes(search.toLowerCase()),
-      ),
-    [badWordsLookup, search],
-  )
+      setBadWordsLookup(
+        (result?.badWords || []).map((badWord: any) => ({
+          label: badWord.word,
+          value: badWord.id,
+        })),
+      )
 
-  const getBadWordLabel = (id: string) => {
-    const found = badWordsLookup.find((bw: { value: string }) => bw.value === id)
-    return found ? found.label : ""
+      setTotalPages(result?.pagination?.totalPages || 1)
+    }
+    catch (error) {
+      console.error("Error fetching data:", error)
+    }
+    finally {
+      setIsLoading(false)
+    }
+  }, [search, page, limit, checkIfBadWordNotExact, fetchAllBadWords])
+
+  // Debounce search function
+  const debouncedSearch = React.useCallback((value: string) => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
+    }
+
+    const timeout = setTimeout(() => {
+      setSearch(value)
+      setPage(1) // Reset to first page on new search
+    }, 100) // 300ms debounce delay
+
+    setSearchTimeout(timeout)
+  }, [])
+
+  // Handle search input change
+  const handleSearchChange = (value: string) => {
+    debouncedSearch(value)
+  }
+
+  // Effect to fetch data when search/page/limit changes
+  React.useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  // Reset search
+  const clearSearch = () => {
+    setSearch("")
+    setPage(1) // Reset to first page on clear
+  }
+
+  // Refresh data
+  const refreshData = () => {
+    fetchData()
   }
 
   const formik = useFormik({
@@ -712,24 +767,36 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
       return
 
     try {
-      const response: any = await addBadWord({ word: newBadWord })
-      if (response?.status === "success") {
-        toast({
-          icon: <Check className="size-6 text-green-600" />,
-          title: "Bad Word Added.",
-          description: "The new bad word has been added.",
-        })
-        badWords.push({ word: newBadWord, id: response.badWord.id })
-        setNewBadWord("")
-        setIsNewBadWordInputVisible(false)
-        formik.setFieldValue("badWordId", response.badWord.id)
-      }
-      else {
+      const existBadWord = await checkIfBadWord(newBadWord)
+      if (existBadWord?.message === "Bad word found") {
         toast({
           icon: <X className="size-6" />,
-          title: "Add Failed.",
-          description: response?.message?.detail || "Unknown error.",
+          title: "Bad Word Already Exists",
+          description: `The bad word "${newBadWord}" already exists.`,
         })
+        setNewBadWord("")
+        setIsNewBadWordInputVisible(false)
+      }
+      else {
+        const response: any = await addBadWord({ word: newBadWord })
+        if (response?.status === "success") {
+          toast({
+            icon: <Check className="size-6 text-green-600" />,
+            title: "Bad Word Added.",
+            description: "The new bad word has been added.",
+          })
+          badWords.push({ word: newBadWord, id: response.badWord.id })
+          setNewBadWord("")
+          setIsNewBadWordInputVisible(false)
+          formik.setFieldValue("badWordId", response.badWord.id)
+        }
+        else {
+          toast({
+            icon: <X className="size-6" />,
+            title: "Add Failed.",
+            description: response?.message?.detail || "Unknown error.",
+          })
+        }
       }
     }
     catch (error) {
@@ -777,6 +844,11 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
         description: response?.message?.detail || "Unknown error.",
       })
     }
+  }
+
+  const getBadWordLabel = (id: string) => {
+    const found: any = badWordsLookup.find((bw: { value: string }) => bw.value === id)
+    return found ? found.label : ""
   }
 
   return (
@@ -839,91 +911,167 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
                       />
 
                       {open && !isNewBadWordInputVisible && (
-                        <Command>
-                          <CommandInput
-                            placeholder="Search bad word..."
-                            className="h-9"
-                            value={search}
-                            onValueChange={setSearch}
-                          />
-                          <CommandList>
-                            <CommandEmpty>No bad word found.</CommandEmpty>
-                            <CommandGroup>
-                              {filteredBadWords.map((item: any) => (
-                                <CommandItem
-                                  key={item.value}
-                                  value={item.value}
-                                  onSelect={() => {
-                                    if (editingBadWordId === item.value)
-                                      return
-                                    formik.setFieldValue("badWordId", item.value)
-                                    setOpen(false)
-                                  }}
-                                  className="flex flex-col"
-                                >
-                                  {editingBadWordId === item.value
-                                    ? (
-                                        <>
-                                          <Input
-                                            value={editingBadWordText}
-                                            onChange={e => setEditingBadWordText(e.target.value)}
-                                            placeholder="Edit bad word"
-                                            className="h-8"
-                                          />
-                                          <div className="flex gap-2 mt-1">
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              onClick={() => handleEditBadWord(item.value)}
-                                            >
-                                              Save
-                                            </Button>
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              onClick={() => {
-                                                setEditingBadWordId(null)
-                                                setEditingBadWordText("")
-                                              }}
-                                            >
-                                              Cancel
-                                            </Button>
-                                          </div>
-                                        </>
-                                      )
-                                    : (
-                                        <div className="flex items-center justify-between w-full">
-                                          <span>{item.label}</span>
-                                          <div className="flex gap-1">
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              onClick={(e) => {
-                                                e.stopPropagation()
-                                                setEditingBadWordId(item.value)
-                                                setEditingBadWordText(item.label)
-                                              }}
-                                            >
-                                              <Pencil />
-                                            </Button>
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleDeleteBadWord(item.value)
-                                              }}
-                                            >
-                                              <Trash2 />
-                                            </Button>
-                                          </div>
-                                        </div>
+                        <>
+                          <Command>
+                            <div className="flex items-center border-b px-3">
+                              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                              <input
+                                className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Search bad word..."
+                                value={search}
+                                onChange={e => handleSearchChange(e.target.value)}
+                              />
+                              {search && (
+                                <Button variant="ghost" size="sm" onClick={clearSearch}>
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            <CommandList>
+                              {isLoading
+                                ? (
+                                    <div className="py-6 text-center flex justify-center items-center w-full text-sm min-h-[200px]">
+                                      Loading...
+                                    </div>
+                                  )
+                                : (
+                                    <>
+                                      {badWordsLookup.length === 0 && (
+                                        <CommandEmpty className="py-6 text-center flex justify-center items-center w-full text-sm min-h-[200px]">No bad words found.</CommandEmpty>
                                       )}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
+                                      <CommandGroup>
+                                        {badWordsLookup.map((item: any) => (
+                                          <CommandItem
+                                            key={item.value}
+                                            value={item.value}
+                                            onSelect={() => {
+                                              if (editingBadWordId === item.value)
+                                                return
+                                              formik.setFieldValue("badWordId", item.value)
+                                              setOpen(false)
+                                            }}
+                                          >
+                                            {editingBadWordId === item.value
+                                              ? (
+                                                  <>
+                                                    <Input
+                                                      value={editingBadWordText}
+                                                      onChange={e => setEditingBadWordText(e.target.value)}
+                                                      placeholder="Edit bad word"
+                                                      className="h-8"
+                                                    />
+                                                    <div className="flex gap-2 mt-1">
+                                                      <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleEditBadWord(item.value)}
+                                                      >
+                                                        Save
+                                                      </Button>
+                                                      <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                          setEditingBadWordId(null)
+                                                          setEditingBadWordText("")
+                                                        }}
+                                                      >
+                                                        Cancel
+                                                      </Button>
+                                                    </div>
+                                                  </>
+                                                )
+                                              : (
+                                                  <div className="flex items-center justify-between w-full">
+                                                    <span>{item.label}</span>
+                                                    <div className="flex gap-1">
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={(e) => {
+                                                          e.stopPropagation()
+                                                          setEditingBadWordId(item.value)
+                                                          setEditingBadWordText(item.label)
+                                                        }}
+                                                      >
+                                                        <Pencil />
+                                                      </Button>
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={(e) => {
+                                                          e.stopPropagation()
+                                                          handleDeleteBadWord(item.value)
+                                                        }}
+                                                      >
+                                                        <Trash2 />
+                                                      </Button>
+                                                    </div>
+                                                  </div>
+                                                )}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </>
+                                  )}
+                            </CommandList>
+                          </Command>
+
+                          {/* Pagination controls - now works for both searching and normal listing */}
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.max(p - 1, 1))}
+                                disabled={page === 1 || isLoading}
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                              </Button>
+                              <span className="text-sm">
+                                Page
+                                {" "}
+                                {page}
+                                {" "}
+                                of
+                                {" "}
+                                {totalPages}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                                disabled={page === totalPages || isLoading}
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex gap-2 items-center">
+                              <select
+                                className="border rounded px-2 py-1 text-sm"
+                                value={limit}
+                                onChange={e => setLimit(Number(e.target.value))}
+                                disabled={isLoading}
+                              >
+                                {[10, 20, 30, 50].map(size => (
+                                  <option key={size} value={size}>
+                                    {size}
+                                    {" "}
+                                    / page
+                                  </option>
+                                ))}
+                              </select>
+                              {/* <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={refreshData}
+                                disabled={isLoading}
+                              >
+                                <div className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+                              </Button> */}
+                            </div>
+                          </div>
+                        </>
                       )}
 
                       {isNewBadWordInputVisible && (

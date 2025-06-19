@@ -124,8 +124,8 @@ export const schema = z.object({
   email: z.string(),
   password: z.string(),
   phone: z.string().nullable(),
-  nim: z.string().nullable(),
-  faculty: z.string().nullable(),
+  // nim: z.string().nullable(),
+  // faculty: z.string().nullable(),
   gender: z.string().nullable(),
   firstLogin: z.boolean(),
   profilePicture: z.string().nullable(),
@@ -160,16 +160,16 @@ function columns(setRowData: (data: z.infer<typeof schema>) => void, setIsDialog
       header: "Full Name",
       cell: ({ row }) => <span>{row.original.fullName ?? "-"}</span>,
     },
-    {
-      accessorKey: "nim",
-      header: "NIM",
-      cell: ({ row }) => <span>{row.original.nim ?? "-"}</span>,
-    },
-    {
-      accessorKey: "faculty",
-      header: "Faculty",
-      cell: ({ row }) => <span>{row.original.faculty ?? "-"}</span>,
-    },
+    // {
+    //   accessorKey: "nim",
+    //   header: "NIM",
+    //   cell: ({ row }) => <span>{row.original.nim ?? "-"}</span>,
+    // },
+    // {
+    //   accessorKey: "faculty",
+    //   header: "Faculty",
+    //   cell: ({ row }) => <span>{row.original.faculty ?? "-"}</span>,
+    // },
     {
       accessorKey: "gender",
       header: "Gender",

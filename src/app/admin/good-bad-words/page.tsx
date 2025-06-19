@@ -6,11 +6,11 @@ import useBadWordStore from "@/context/badWords"
 
 export default function Page() {
   const { fetchAllGoodWords, goodWords } = useGoodWordStore()
-  const { fetchAllBadWords, badWords } = useBadWordStore()
+  const { fetchAllWithoutPagination, badWords } = useBadWordStore()
   useEffect(() => {
     const fetchData = async () => {
       await fetchAllGoodWords()
-      await fetchAllBadWords()
+      await fetchAllWithoutPagination()
     }
     fetchData()
   }, [])
