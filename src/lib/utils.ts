@@ -42,13 +42,28 @@ export function timeAgo(createdAt: any) {
 }
 
 export function toLocalDateTime(dateString: string) {
-  const date: any = new Date(dateString)
+  if (!dateString)
+    return "No date available"
 
-  if (Number.isNaN(date)) {
+  let date: Date | null = null
+
+  // Cek format DD/MM/YYYY, HH:mm:ss
+  const localMatch = dateString.match(/^(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2}):(\d{2})$/)
+  if (localMatch) {
+    // Urutan: hari/bulan/tahun
+    const [, day, month, year, hour, minute, second] = localMatch.map(Number)
+    date = new Date(year, month - 1, day, hour, minute, second)
+  }
+  else {
+    // Fallback: ISO string atau format lain yang didukung JS
+    date = new Date(dateString)
+  }
+
+  if (!date || Number.isNaN(date.getTime())) {
     return "Invalid date"
   }
 
-  // Contoh hasil: "21 April 2025 pukul 15.09"
+  // Format: 6 December 2025 at 07:51
   const datePart = date.toLocaleDateString("en-US", {
     day: "numeric",
     month: "long",
@@ -58,6 +73,7 @@ export function toLocalDateTime(dateString: string) {
   const timePart = date.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   })
 
   return `${datePart} at ${timePart}`
