@@ -134,7 +134,7 @@ export const schema = z.object({
   updatedAt: z.string(),
 })
 
-function columns(setRowData: (data: z.infer<typeof schema>) => void, setIsDialogOpenEdit: (open: boolean) => void, setIsDialogOpenDelete: (open: boolean) => void): ColumnDef<z.infer<typeof schema>>[] {
+function columns(setRowData: (data: z.infer<typeof schema>) => void, setIsDialogOpenEdit: (open: boolean) => void, setIsDialogOpenDelete: (open: boolean) => void, roleName: string): ColumnDef<z.infer<typeof schema>>[] {
   return [
     {
       accessorKey: "no",
@@ -209,16 +209,22 @@ function columns(setRowData: (data: z.infer<typeof schema>) => void, setIsDialog
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onSelect={() => {
-                setRowData(row.original)
-                setIsDialogOpenEdit(true)
-              }}
-            >
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            {
+              roleName === "SuperAdmin" && (
+                <>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onSelect={() => {
+                      setRowData(row.original)
+                      setIsDialogOpenEdit(true)
+                    }}
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )
+            }
             <DropdownMenuItem
               className="cursor-pointer"
               onSelect={() => {
@@ -255,6 +261,7 @@ export function DataTable({
 }: {
   data: z.infer<typeof schema>[]
 }) {
+  const { user, getLoggedInUser } = useAuthStore()
   const [data, setData] = React.useState(initialData)
   const [isDialogOpenCreate, setIsDialogOpenCreate] = React.useState(false)
   const [isDialogOpenEdit, setIsDialogOpenEdit] = React.useState(false)
@@ -285,7 +292,7 @@ export function DataTable({
     () => data?.map(({ id }) => id) || [],
     [data],
   )
-  const cols = columns(setRowData, setIsDialogOpenEdit, setIsDialogOpenDelete)
+  const cols = columns(setRowData, setIsDialogOpenEdit, setIsDialogOpenDelete, user?.role?.name)
 
   const table = useReactTable({
     data,
@@ -371,10 +378,14 @@ export function DataTable({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm" onClick={() => setIsDialogOpenCreate(true)}>
-            <PlusIcon />
-            <span className="hidden lg:inline">Add Users</span>
-          </Button>
+          {
+            user?.role?.name === "SuperAdmin" && (
+              <Button variant="outline" size="sm" onClick={() => setIsDialogOpenCreate(true)}>
+                <PlusIcon />
+                <span className="hidden lg:inline">Add Users</span>
+              </Button>
+            )
+          }
           <PopUpDialog
             isDialogOpen={isDialogOpenCreate}
             setIsDialogOpen={setIsDialogOpenCreate}
@@ -559,7 +570,7 @@ export function DataTable({
 }
 
 function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
-  const { editUser, addUser, removeUser } = useUserStore()
+  const { editUserAdmin, addUser, removeUser } = useUserStore()
   const { checkUsername, checkEmail } = useAuthStore()
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = React.useState(false)
   const [usernameError, setUsernameError] = React.useState<string | null>(null)
@@ -603,8 +614,8 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
     enableReinitialize: true,
     initialValues: {
       fullName: data?.fullName || "",
-      nim: data?.nim || "",
-      faculty: data?.faculty || "",
+      // nim: data?.nim || "",
+      // faculty: data?.faculty || "",
       phone: data?.phone || "",
       email: data?.email || "",
       newPassword: "",
@@ -613,8 +624,8 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
     },
     validationSchema: Yup.object({
       fullName: Yup.string().nullable(),
-      nim: Yup.string().nullable(),
-      faculty: Yup.string().nullable(),
+      // nim: Yup.string().nullable(),
+      // faculty: Yup.string().nullable(),
       phone: Yup.string().nullable(),
       email: Yup.string().email("Invalid email format").nullable(),
       newPassword: Yup.string().nullable(),
@@ -662,7 +673,7 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
           response = await addUser(updatedFields)
         }
         else {
-          response = await editUser(data?.id, updatedFields)
+          response = await editUserAdmin(data?.id, updatedFields)
         }
 
         if (response?.status === "success") {
@@ -812,7 +823,7 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
                         error={usernameError || (formik.touched.username && typeof formik.errors.username === "string" ? formik.errors.username : null)}
                         placeholder="Username"
                       />
-                      <Input
+                      {/* <Input
                         name="nim"
                         label="NIM (optional)"
                         value={formik.values.nim}
@@ -829,7 +840,7 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat }: any) {
                         onBlur={formik.handleBlur}
                         error={formik.touched.faculty && typeof formik.errors.faculty === "string" ? formik.errors.faculty : null}
                         placeholder="Faculty"
-                      />
+                      /> */}
                       <Input
                         name="phone"
                         label="Phone Number (optional)"

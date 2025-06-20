@@ -21,6 +21,7 @@ interface UserState {
   fetchUserById: (id: string) => Promise<void>
   addUser: (user: CreateUserInput, profilePicture?: File, backgroundPicture?: File) => Promise<void>
   editUser: (id: string, data: Partial<CreateUserInput>, profilePicture?: File, backgroundPicture?: File) => Promise<void>
+  editUserAdmin: (id: string, data: Partial<CreateUserInput>, profilePicture?: File, backgroundPicture?: File) => Promise<void>
   removeUser: (id: string) => Promise<void>
   clearSelectedUser: () => void
 }
@@ -83,6 +84,22 @@ const useUserStore = create<UserState>(set => ({
       Cookies.set("access_token", res.accessToken, { expires: 1 })
       Cookies.set("refresh_token", res.refreshToken, { expires: 7 })
       await useAuthStore.getState().getLoggedInUser()
+      set({ isLoading: false })
+      return res
+    }
+    catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to update user",
+        isLoading: false,
+      })
+    }
+  },
+
+  editUserAdmin: async (id: string, data: Partial<CreateUserInput>, profilePicture?: File, backgroundPicture?: File) => {
+    set({ isLoading: true, error: null }) // This function is similar to editUser but specifically for admin use
+    try {
+      const res = await updateUser(id, data, profilePicture, backgroundPicture)
+      await useUserStore.getState().fetchAllUsers()
       set({ isLoading: false })
       return res
     }
