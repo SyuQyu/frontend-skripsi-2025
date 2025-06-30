@@ -1,15 +1,15 @@
-"use client"
 import React, { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import clsx from "clsx"
 import Link from "next/link"
-import { LogOut, X } from "lucide-react"
+import { BellIcon, LogOut, X } from "lucide-react"
 import { bottomMenuItems, menuItems } from "@/constants/baseRoute"
 import { Button, Input } from "@/components/common"
 import { getRefreshToken, removeTokens } from "@/lib/cookies"
 import useAuthStore from "@/context/auth"
 import { toast } from "@/components/ui/use-toast"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import useNotificationStore from "@/context/notification"
 
 export default function Header() {
   const pathname = usePathname()
@@ -19,9 +19,21 @@ export default function Header() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
+  // Notifikasi
+  const [isNotifOpen, setIsNotifOpen] = useState(false)
+  const { notifications, fetchNotificationsByUser, markAsRead, removeNotification, isLoading } = useNotificationStore()
+  // Ganti dengan user id dari context/auth jika ada
+  const userId = useAuthStore.getState().user?.id
+
   useEffect(() => {
     setActivePath(pathname)
   }, [pathname])
+
+  useEffect(() => {
+    if (isNotifOpen && userId) {
+      fetchNotificationsByUser(userId)
+    }
+  }, [isNotifOpen, userId, fetchNotificationsByUser])
 
   const handleLogout = async () => {
     const refreshToken = getRefreshToken()
@@ -92,6 +104,14 @@ export default function Header() {
                   </Link>
                 )
           ))}
+          {/* Tombol Notifikasi */}
+          <button
+            className="flex flex-row justify-start items-center gap-3 group"
+            onClick={() => setIsNotifOpen(true)}
+          >
+            <BellIcon className="h-6 w-6 text-3xl transition-colors duration-200 group-hover:text-blue-500" />
+            <p className="font-normal text-base group-hover:text-blue-500">Notifications</p>
+          </button>
         </div>
         <div className="flex flex-row justify-start items-center gap-3 mt-auto w-full pt-4">
           <div className="flex flex-col gap-6 justify-start items-start mt-4 ml-2">
@@ -150,6 +170,76 @@ export default function Header() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for Notifications */}
+      <Dialog open={isNotifOpen} onOpenChange={setIsNotifOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Notifications</DialogTitle>
+            <DialogDescription>
+              Notifikasi like dan reply terbaru Anda
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-72 overflow-y-auto space-y-2">
+            {isLoading
+              ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                )
+              : notifications.length === 0
+                ? (
+                    <div className="text-center py-8 text-muted-foreground">No notifications.</div>
+                  )
+                : (
+                    notifications.map(notif => (
+                      <div
+                        key={notif.id}
+                        className={`flex items-start gap-2 p-2 rounded ${notif.isRead ? "bg-muted" : "bg-blue-50"}`}
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium">{notif.title || "Notification"}</div>
+                          <div className="text-xs text-muted-foreground">{notif.body || notif.message}</div>
+                          {notif.url && (
+                            <Button
+                              size="sm"
+                              variant="link"
+                              className="px-0"
+                              onClick={() => {
+                                // Tutup dialog lalu redirect
+                                setIsNotifOpen(false)
+                                router.push(notif.url)
+                              }}
+                            >
+                              Lihat Detail
+                            </Button>
+                          )}
+                        </div>
+                        {!notif.isRead && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => markAsRead(notif.id)}
+                          >
+                            Mark as read
+                          </Button>
+                        )}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => removeNotification(notif.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNotifOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

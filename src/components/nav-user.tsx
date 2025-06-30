@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 
 import { useRouter } from "next/navigation"
+import * as React from "react"
 import { toast } from "@/components/ui/use-toast"
 import {
   Avatar,
@@ -35,10 +36,16 @@ import {
 import { getRefreshToken, removeTokens } from "@/lib/cookies"
 import useAuthStore from "@/context/auth"
 
+// Tambahan import untuk notification
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import useNotificationStore from "@/context/notification"
+import { Button } from "@/components/ui/button"
+
 export function NavUser({
   user,
 }: {
   user: {
+    id: string
     username: string
     email: string
     avatar: string
@@ -47,6 +54,18 @@ export function NavUser({
   const { isMobile } = useSidebar()
   const { logout } = useAuthStore()
   const router = useRouter()
+
+  // State untuk dialog notifikasi
+  const [isNotifOpen, setIsNotifOpen] = React.useState(false)
+  const { notifications, fetchNotificationsByUser, markAsRead, removeNotification, isLoading } = useNotificationStore()
+  const userId = user?.id // Ganti dengan user.id jika ada id
+
+  // Fetch notifikasi saat dialog dibuka
+  React.useEffect(() => {
+    if (isNotifOpen && userId) {
+      fetchNotificationsByUser(userId)
+    }
+  }, [isNotifOpen, userId, fetchNotificationsByUser])
 
   const handleLogout = async () => {
     const refreshToken = getRefreshToken()
@@ -73,6 +92,7 @@ export function NavUser({
       }, 2000)
     }
   }
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -125,7 +145,7 @@ export function NavUser({
                 <CreditCardIcon />
                 Billing
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsNotifOpen(true)}>
                 <BellIcon />
                 Notifications
               </DropdownMenuItem>
@@ -138,6 +158,59 @@ export function NavUser({
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+
+      {/* Notifikasi Pop Up Dialog */}
+      <Dialog open={isNotifOpen} onOpenChange={open => setIsNotifOpen(open)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Notifications</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-72 overflow-y-auto space-y-2">
+            {isLoading
+              ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                )
+              : notifications.length === 0
+                ? (
+                    <div className="text-center py-8 text-muted-foreground">No notifications.</div>
+                  )
+                : (
+                    notifications.map(notif => (
+                      <div
+                        key={notif.id}
+                        className={`flex items-start gap-2 p-2 rounded ${notif.isRead ? "bg-muted" : "bg-blue-50"}`}
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium">{notif.title || "Notification"}</div>
+                          <div className="text-xs text-muted-foreground">{notif.body || notif.message}</div>
+                        </div>
+                        {!notif.isRead && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => markAsRead(notif.id)}
+                          >
+                            Mark as read
+                          </Button>
+                        )}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => removeNotification(notif.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNotifOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarMenu>
   )
 }

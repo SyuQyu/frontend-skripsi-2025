@@ -8,21 +8,22 @@ export default function ImageWithFallback({
   src,
   alt,
   className,
+  fallbackSrc = "/images/error-image-generic.png",
   ...props
 }: ImageProps & { fallbackSrc?: string }) {
-  const [fallback, setFallback] = useState(false)
+  const [imgSrc, setImgSrc] = useState(src)
 
   useEffect(() => {
-    setFallback(false)
+    setImgSrc(src)
   }, [src])
 
   return (
     <Image
-      src={src}
-      alt={alt}
-      className={clsx(className, { hidden: fallback })}
-      onError={() => setFallback(true)}
       {...props}
+      src={imgSrc}
+      alt={alt}
+      className={clsx(className)}
+      onError={() => setImgSrc(fallbackSrc)}
     />
   )
 }
