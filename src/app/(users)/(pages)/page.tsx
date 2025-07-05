@@ -129,30 +129,39 @@ export default function Home() {
                   </DialogHeader>
 
                   {filteredWords.length > 0 && (
-                    <div className="mb-2 flex flex-wrap gap-2">
+                    <div className="mb-2 flex flex-row gap-2 overflow-y-scroll">
                       {filteredWords.map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-2 bg-red-100 border border-red-400 rounded px-2 py-1">
+                        <div
+                          key={idx}
+                          className="bg-red-100 border border-red-400 rounded px-2 py-1 mb-2"
+                        >
                           <span className="text-red-700 font-semibold">{item.original}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            className="text-blue-600 hover:underline p-0 h-auto"
-                            onClick={() => {
-                              const replaced = formik.values.content.replace(
-                                new RegExp(item.rawWord, "gi"),
-                                item.replacement,
-                              )
-                              formik.setFieldValue("content", replaced)
-
-                              checkWord(replaced).then((result: any) => {
-                                setFilteredWords(result.filteredWords || [])
-                              })
-                            }}
-                          >
-                            Replace with
-                            {" "}
-                            <span className="font-bold ml-1">{item.replacement}</span>
-                          </Button>
+                          {/* Tombol-tombol pengganti di bawah kata kasar, horizontal, dengan pemisah */}
+                          <div className="flex flex-row flex-wrap gap-2 mt-1">
+                            {(item.allReplacementWords || item.replacements || [item.replacement]).map((rep: string, repIdx: number) => (
+                              <div key={repIdx} className="flex items-center">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  className="text-blue-600 hover:underline p-0 h-auto w-fit"
+                                  onClick={() => {
+                                    const regex = new RegExp(item.rawWord, "gi")
+                                    const replaced = formik.values.content.replace(regex, rep)
+                                    formik.setFieldValue("content", replaced)
+                                    checkWord(replaced).then((result: any) => {
+                                      setFilteredWords(result.filteredWords || [])
+                                    })
+                                  }}
+                                >
+                                  Ganti dengan <span className="font-bold ml-1">{rep}</span>
+                                </Button>
+                                {/* Pemisah antar suggestion, kecuali terakhir */}
+                                {repIdx < (item.allReplacementWords?.length || item.replacements?.length || 1) - 1 && (
+                                  <span className="mx-1 text-gray-300">|</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>

@@ -92,13 +92,10 @@ import useGoodWordStore from "@/context/goodWords"
 import useBadWordStore from "@/context/badWords"
 
 export const schema = z.object({
-  id: z.string(),
-  word: z.string(),
+  id: z.string(), // This is the unique identifier for the good word
+  goodWord: z.string(),
   badWordId: z.string(),
-  badWord: z.object({
-    id: z.string(),
-    word: z.string(),
-  }),
+  badWord: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -115,14 +112,14 @@ function columns(
       cell: ({ row }) => <span className="text-center">{row.index + 1}</span>,
     },
     {
-      accessorKey: "word",
-      header: "Word",
-      cell: ({ row }) => <span>{row.original.word}</span>,
+      accessorKey: "goodWord",
+      header: "Good Word",
+      cell: ({ row }) => <span>{row.original.goodWord}</span>,
     },
     {
-      accessorKey: "badWord.word",
+      accessorKey: "badWord",
       header: "Bad Word",
-      cell: ({ row }) => <span>{row.original.badWord.word}</span>,
+      cell: ({ row }) => <span>{row.original.badWord}</span>,
     },
     {
       accessorKey: "createdAt",
@@ -688,7 +685,7 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      word: data?.word || "",
+      word: data?.goodWord || "",
       badWordId: data?.badWordId || "",
     },
     validationSchema: Yup.object({
@@ -785,10 +782,10 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
             title: "Bad Word Added.",
             description: "The new bad word has been added.",
           })
-          badWords.push({ word: newBadWord, id: response.badWord.id })
+          badWords.push({ word: newBadWord, id: response.listBadWords.id })
           setNewBadWord("")
           setIsNewBadWordInputVisible(false)
-          formik.setFieldValue("badWordId", response.badWord.id)
+          formik.setFieldValue("badWordId", response.listBadWords.id)
         }
         else {
           toast({
@@ -816,6 +813,11 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
         title: "Update Success",
         description: "Bad word updated successfully.",
       })
+      // Update badWords array in-place
+      const idx = badWords.findIndex((bw: any) => bw.id === id)
+      if (idx !== -1) {
+        badWords[idx].word = editingBadWordText
+      }
       setEditingBadWordId(null)
       setEditingBadWordText("")
     }
@@ -836,6 +838,11 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
         title: "Deleted",
         description: "Bad word has been deleted.",
       })
+      // Remove from badWords array
+      const idx = badWords.findIndex((bw: any) => bw.id === id)
+      if (idx !== -1) {
+        badWords.splice(idx, 1)
+      }
     }
     else {
       toast({
