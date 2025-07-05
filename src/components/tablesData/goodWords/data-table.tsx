@@ -94,6 +94,7 @@ import useBadWordStore from "@/context/badWords"
 export const schema = z.object({
   id: z.string(), // This is the unique identifier for the good word
   goodWord: z.string(),
+  goodWordId: z.string(),
   badWordId: z.string(),
   badWord: z.string(),
   createdAt: z.string(),
@@ -699,7 +700,7 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
           response = await addGoodWord(values)
         }
         else {
-          response = await editGoodWord(data?.id, values)
+          response = await editGoodWord(data?.goodWordId, values)
         }
 
         if (response?.status === "success") {
@@ -733,7 +734,7 @@ function PopUpDialog({ data, isDialogOpen, setIsDialogOpen, forWhat, badWords }:
 
   const handleDelete = async () => {
     try {
-      const response: any = await removeGoodWord(data?.id)
+      const response: any = await removeGoodWord(data?.goodWordId)
       if (response?.status === "success") {
         toast({
           icon: <Check className="size-6 text-green-600" />,
